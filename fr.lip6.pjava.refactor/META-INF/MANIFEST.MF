@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Refactor
+Bundle-SymbolicName: fr.lip6.pjava.refactor;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: fr.lip6.pjava.refactor.Activator
+Bundle-Vendor: LIP6
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.ui,
+ org.eclipse.ltk.core.refactoring,
+ org.eclipse.text
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: fr.lip6.pjava.refactor
+Bundle-ActivationPolicy: lazy
