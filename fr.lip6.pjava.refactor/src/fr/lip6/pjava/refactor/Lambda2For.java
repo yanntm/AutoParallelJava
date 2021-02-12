@@ -5,21 +5,21 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.LambdaExpression;
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.internal.ui.fix.AbstractMultiFix;
 import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
 import org.eclipse.jdt.ui.cleanup.ICleanUp;
 import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
-public class Lambda2For extends AbstractMultiFix implements ICleanUp {
+/**
+ * Class that will be call when we ask for a Clean-Up
+ * @author teill
+ *
+ */
+public class Lambda2For extends AbstractMultiFix implements ICleanUp {	 
 
 	@Override
 	public void setOptions(CleanUpOptions options) {
@@ -30,12 +30,16 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	@Override
 	public String[] getStepDescriptions() {
 		// TODO Auto-generated method stub
-		//vsrbfd
 		return new String[0];
 	}
-
+	
+	/**
+	 * Parse a ICompilationUnit to a CompilationUnit, use to generate an AST 
+	 * @param lwUnit the source file we want to parse
+	 * @return the AST generated
+	 */
 	protected CompilationUnit parse(ICompilationUnit lwUnit) {
-		ASTParser parser = ASTParser.newParser(AST.JLS8);
+		ASTParser parser = ASTParser.newParser(AST.JLS15);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		parser.setSource(lwUnit);
 		parser.setResolveBindings(true);
@@ -45,31 +49,6 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	@Override
 	public RefactoringStatus checkPreConditions(IJavaProject project, ICompilationUnit[] compilationUnits,
 			IProgressMonitor monitor) throws CoreException {
-
-		for (ICompilationUnit cu : compilationUnits) {
-			CompilationUnit unit = parse(cu);
-			final ASTRewrite rewrite = ASTRewrite.create(unit.getAST());
-
-			unit.accept(new ASTVisitor() {
-				@Override
-				public void endVisit(LambdaExpression node) {
-					super.endVisit(node);
-					rewrite.remove(node, null);
-					int u=0;
-//					ASTNode replacement=AST.newAST(O);
-//					
-//						rewrite.replace(node, "dtd", null);
-//						 unit.recordModifications ();
-//						 // ...			
-//						 IAction VariableDeclarationStatement = createNewVariableDeclarationStatement (manager, ast);
-//						 block.statements (). add (firstReferenceIndex, instruction); 
-					//TextEditGroup editGroup;
-					//rewrite.replace(node, replacement, editGroup);
-				}
-						
-			});
-		}
-
 		return new RefactoringStatus();
 	}
 
@@ -87,8 +66,13 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 
 	@Override
 	protected ICleanUpFix createFix(CompilationUnit unit) throws CoreException {
-		// TODO Auto-generated method stub
-		return null;
+		if(unit == null)return null;
+		return Lambda2For.createCleanUp(unit);
+	}
+	
+
+	private static ICleanUpFix createCleanUp(CompilationUnit unit) {
+		return new TraitementFor(unit);
 	}
 
 	@Override
