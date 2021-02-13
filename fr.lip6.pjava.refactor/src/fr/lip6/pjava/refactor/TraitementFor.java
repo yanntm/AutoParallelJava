@@ -42,7 +42,7 @@ public class TraitementFor implements ICleanUpFix {
 	public TraitementFor(CompilationUnit unit) {
 		this.unit=unit;
 	}
-
+	
 	@Override
 	public CompilationUnitChange createChange(IProgressMonitor progressMonitor) throws CoreException {
 		AST ast = unit.getAST();   //We obtain the AST from the CompilationUnit. The will be use as a factory
@@ -114,18 +114,20 @@ public class TraitementFor implements ICleanUpFix {
 			}						
 		});
 		
-		
-		
-		CompilationUnitChange changement = applicationChangement(rewrite);
-		return changement;
+		return applicationChangement(rewrite); //Return a CompilationUnitChange that all our modification
 	}
-
+	
+	/**
+	 * Convert an ASTRewriter to a CompilationUnitChange
+	 * @param rewriter the rewriter with our modification
+	 * @return compilationUnitChange ready to apply all the changes
+	 */
 	private CompilationUnitChange applicationChangement(ASTRewrite rewriter) {
 		CompilationUnitChange compilationUnitChange = new CompilationUnitChange("Refactor of EnhancedFor", (ICompilationUnit)unit.getJavaElement());
 		
 		try {
-			TextEdit textEdit = rewriter.rewriteAST();
-			compilationUnitChange.setEdit(textEdit);
+			TextEdit textEdit = rewriter.rewriteAST(); //create a TextEdit, that contain the modifications inside the rewriter
+			compilationUnitChange.setEdit(textEdit);   //set the TextEdit as the things that contains our modification in the CompilationUnitChange
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
