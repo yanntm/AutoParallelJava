@@ -1,7 +1,5 @@
 package fr.lip6.pjava.refactor;
 
-import java.util.List;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -9,7 +7,6 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
@@ -57,7 +54,7 @@ public class TraitementFor implements ICleanUpFix {
 				//Creation of : <collection>.stream()
 				MethodInvocation replaceMethod = ast.newMethodInvocation();
 				// Method to copy an ASTNode and use it elsewhere : ASTNode.copySubtree(AST, nodeToCopy))
-				replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,node.getExpression())); 
+				replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,node.getExpression())); //A eviter
 				replaceMethod.setName(ast.newSimpleName("stream"));
 				
 				//Detection of the inside of the Enhanced For
@@ -68,6 +65,7 @@ public class TraitementFor implements ICleanUpFix {
 						if(insideBlock.getNodeType()==ASTNode.IF_STATEMENT) { //If the only things inside is a If_Block
 							IfStatement insideIF = (IfStatement) insideBlock;
 							if(insideIF.getElseStatement()==null) { //Check if the IF Block doesn't have a Else
+								
 								//We create the Method Invocation of the filter on the stream invocation
 								MethodInvocation filterIF = ast.newMethodInvocation();
 								filterIF.setExpression(replaceMethod); //We call the filter method after the stream call
@@ -90,7 +88,9 @@ public class TraitementFor implements ICleanUpFix {
 								forEachCorps.parameters().add(ASTNode.copySubtree(ast,node.getParameter())); //We set the parameter of the lambda, same as the Variable declaration of the Enhanced For
 								forEach.arguments().add(forEachCorps); //We add the LambdaExpression to the call of the forEach method
 								
-								rewrite.replace(node, forEach, null); //We add our modification to the record
+								
+								ExpressionStatement st = ast.newExpressionStatement(forEach);
+								rewrite.replace(node, st, null); //We add our modification to the record
 							}
 						}
 					}
@@ -106,8 +106,8 @@ public class TraitementFor implements ICleanUpFix {
 							forEachCorps.setBody(ASTNode.copySubtree(ast, b));
 							forEachCorps.parameters().add(ASTNode.copySubtree(ast,node.getParameter()));
 							forEach.arguments().add(forEachCorps);
-							
-							rewrite.replace(node, forEach, null); //We add our modification to the record
+							ExpressionStatement st = ast.newExpressionStatement(forEach);
+							rewrite.replace(node, st, null); //We add our modification to the record
 						}	
 					}	
 				}
