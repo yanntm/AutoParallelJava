@@ -9,6 +9,7 @@
             class="fr.lip6.pjava.refactor.Lambda2For"
             id="fr.lip6.pjava.refactor.cleanUp1">
       </cleanUp>
+      
    </extension>
 
 </plugin>

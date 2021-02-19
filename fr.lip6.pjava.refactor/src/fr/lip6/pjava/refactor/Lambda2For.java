@@ -1,5 +1,8 @@
 package fr.lip6.pjava.refactor;
 
+import java.util.Map;
+
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -9,6 +12,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.internal.ui.fix.AbstractMultiFix;
 import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
+import org.eclipse.jdt.ui.cleanup.CleanUpRequirements;
 import org.eclipse.jdt.ui.cleanup.ICleanUp;
 import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
@@ -20,17 +24,32 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
  *
  */
 public class Lambda2For extends AbstractMultiFix implements ICleanUp {	 
-
-	@Override
-	public void setOptions(CleanUpOptions options) {
-		// TODO Auto-generated method stub
-
+	private CleanUpOptions fOptions;
+	private RefactoringStatus fStatus;
+	
+	public Lambda2For() {
+		// TODO Auto-generated constructor stub
 	}
-
+	
 	@Override
 	public String[] getStepDescriptions() {
-		// TODO Auto-generated method stub
-		return new String[0];
+		if(fOptions.isEnabled("cleanup.transform_enhanced_for")) {
+			return new String[] {"Transform Enhanced For to Stream"};
+		}
+		return null;
+	}
+	
+	public CleanUpRequirements getRequirements() {
+		boolean changedRegionsRequired= false;
+		Map compilerOptions= null;
+		boolean isLambda2For = fOptions.isEnabled("cleanup.transform_enhanced_for"); //$NON-NLS-1$
+		return new CleanUpRequirements(isLambda2For, isLambda2For, changedRegionsRequired, compilerOptions);   
+	}
+	
+	public void setOptions(CleanUpOptions options) {
+		Assert.isLegal(options != null);
+		Assert.isTrue(fOptions == null);
+		fOptions= options;  
 	}
 	
 	/**
@@ -49,13 +68,23 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	@Override
 	public RefactoringStatus checkPreConditions(IJavaProject project, ICompilationUnit[] compilationUnits,
 			IProgressMonitor monitor) throws CoreException {
+		if (fOptions.isEnabled("cleanup.transform_enhanced_for")) { //$NON-NLS-1$
+			fStatus= new RefactoringStatus();
+		}
 		return new RefactoringStatus();
 	}
 
 	@Override
 	public RefactoringStatus checkPostConditions(IProgressMonitor monitor) throws CoreException {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			if (fStatus == null || fStatus.isOK()) {
+				return new RefactoringStatus();
+			} else {
+				return fStatus;
+			}
+		} finally {
+			fStatus= null;
+		}
 	}
 
 	@Override

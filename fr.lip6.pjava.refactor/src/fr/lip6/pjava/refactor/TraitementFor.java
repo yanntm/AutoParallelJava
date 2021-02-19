@@ -1,8 +1,12 @@
 package fr.lip6.pjava.refactor;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -11,9 +15,12 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
@@ -51,11 +58,31 @@ public class TraitementFor implements ICleanUpFix {
 			@Override
 			public void endVisit(EnhancedForStatement node) {
 				
-				//Creation of : <collection>.stream()
+				ITypeBinding t = ((SimpleName)node.getExpression()).resolveTypeBinding();
+				
 				MethodInvocation replaceMethod = ast.newMethodInvocation();
+				if(!t.isArray() && !containsCollection(t)) {
+					return;
+				}else {
+					if(containsCollection(t)) {
+						replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,node.getExpression())); //A eviter
+						replaceMethod.setName(ast.newSimpleName("stream"));
+					}
+					else {
+						if(t.isArray()) {
+							replaceMethod.arguments().add(((Expression) ASTNode.copySubtree(ast,node.getExpression()))); //A eviter
+							replaceMethod.setName(ast.newSimpleName("stream"));
+							replaceMethod.setExpression(ast.newSimpleName("Arrays"));
+						}
+						else {
+						}
+					}
+				}
+				
+				//Creation of : <collection>.stream()
+				
 				// Method to copy an ASTNode and use it elsewhere : ASTNode.copySubtree(AST, nodeToCopy))
-				replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,node.getExpression())); //A eviter
-				replaceMethod.setName(ast.newSimpleName("stream"));
+				
 				
 				//Detection of the inside of the Enhanced For
 				if(node.getBody().getNodeType()==ASTNode.BLOCK) {
@@ -111,6 +138,16 @@ public class TraitementFor implements ICleanUpFix {
 						}	
 					}	
 				}
+			}
+
+			private boolean containsCollection(ITypeBinding t) {
+				for (ITypeBinding i :t.getInterfaces()){
+					if(i.getBinaryName().contains("java.util.Collection")) {
+						System.out.println("LALALALA");
+						return true;
+					}
+				}
+				return false;
 			}						
 		});
 		
