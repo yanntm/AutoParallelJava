@@ -1,5 +1,6 @@
 package fr.lip6.pjava.refactor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -9,9 +10,24 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.BreakStatement;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IfStatement;
+import org.eclipse.jdt.core.dom.LambdaExpression;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.internal.ui.fix.AbstractMultiFix;
 import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
 import org.eclipse.jdt.ui.cleanup.CleanUpRequirements;
@@ -28,6 +44,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 public class Lambda2For extends AbstractMultiFix implements ICleanUp {	 
 	private CleanUpOptions fOptions;
 	private RefactoringStatus fStatus;
+	List<EnhancedForStatement> forATraiter = new ArrayList<EnhancedForStatement>();
 	
 	public Lambda2For() {
 		// TODO Auto-generated constructor stub
@@ -72,8 +89,32 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			IProgressMonitor monitor) throws CoreException {
 		if (fOptions.isEnabled("cleanup.transform_enhanced_for")) { //$NON-NLS-1$
 			fStatus= new RefactoringStatus();
+	
+			for( ICompilationUnit icu : compilationUnits) {
+				CompilationUnit cu = parse(icu);
+				
+				cu.accept(new ASTVisitor() {
+				@SuppressWarnings("unchecked")
+				@Override
+				public boolean visit(EnhancedForStatement node) {
+					
+					
+					ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
+					node.getBody().accept(visitorPreCond);
+					
+					if (visitorPreCond.isUpgradable())
+					{
+						forATraiter.add(node);
+					}
+					return false;
+				}
+						
+			});
+				
+			}
+			
 		}
-		List<EnhancedForStatement> forATrater;
+		
 		return new RefactoringStatus();
 		
 	}
@@ -99,12 +140,12 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	@Override
 	protected ICleanUpFix createFix(CompilationUnit unit) throws CoreException {
 		if(unit == null && !fOptions.isEnabled("cleanup.transform_enhanced_for"))return null;
-		return Lambda2For.createCleanUp(unit);
+		return Lambda2For.createCleanUp(unit, forATraiter);
 	}
 	
 
-	private static ICleanUpFix createCleanUp(CompilationUnit unit) {
-		return new TraitementFor(unit);
+	private static ICleanUpFix createCleanUp(CompilationUnit unit, List<EnhancedForStatement> forATraiter) {
+		return new TraitementFor(unit, forATraiter);
 	}
 
 	@Override

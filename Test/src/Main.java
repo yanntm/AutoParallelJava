@@ -1,8 +1,13 @@
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class Main {
 
+	public static void dodo() throws InterruptedException, IllegalAccessException {
+		Thread.sleep(10);
+		return;
+	}
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		List<Integer> l =new ArrayList<>();
@@ -14,30 +19,30 @@ public class Main {
 		
 		
 		//Test 1
-		
 		for(Integer i:l) {
 			
 		}
 		
 		//TEST 2 
-		
 		for(Personne p:pers) {
 			p.anniversaire();
 		}
 		
 		//Test 3
-		
 		for(Personne p:pers) {
 			if(p.age==0) {
 				p.anniversaire();
 			}
 		}
 		
+		Personne 
 		//TEST4
-		
+		Personne pp;
 		for(Personne p:pers) {
 			if(p.age==0) {
 				p.anniversaire();
+				pp = new Personne();
+				
 			}else {
 				
 			}
@@ -49,6 +54,7 @@ public class Main {
 			if(p.age==0) {
 				p.anniversaire();
 				p.anniversaire();
+				}
 			}
 		}
 		
@@ -65,17 +71,22 @@ public class Main {
 			p.anniversaire();
 		}
 		
-		for(Personne p:pers) {
-			for(int i =0; i<10; i++) {
+		/*for(Personne p:pers) {
+			for(Personne p: pers2) {
 				p.anniversaire();
 			}
-		}
+		}*/
 		
 		for(Personne p:pers) {
 			try {
+				dodo();
 				p.anniversaire2();
-			}catch (Exception e) {
+				Personne pp = new Personne(120);
+				throw new Exception();
+			}catch (IllegalAccessException e) {
 				// TODO: handle exception
+			} catch (Exception e1) {
+				
 			}
 		}
 
@@ -109,9 +120,18 @@ public class Main {
 		});
 		
 	}
+		
+		
 	
 	public static class Personne{
-		private int age=0;
+		public int age=0;
+		
+		Personne(int age) throws IllegalArgumentException {
+			if (age> 100) {
+				throw new IllegalArgumentException();
+			}
+			this.age = age;
+		}
 		
 		void anniversaire() {
 			age++;

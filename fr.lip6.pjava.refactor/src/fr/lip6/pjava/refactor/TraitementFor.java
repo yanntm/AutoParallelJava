@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
+import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.text.edits.TextEdit;
 
@@ -38,13 +39,16 @@ public class TraitementFor implements ICleanUpFix {
 	 * CompilationUnit represents the AST, and to call a visitor on the tree
 	 */
 	private CompilationUnit unit;
+	private List<EnhancedForStatement> listFor;
 
 	/**
 	 * The constructor used to initiate the attribute
 	 * @param unit The CompilationUnit of the document
+	 * @param forATraiter 
 	 */
-	public TraitementFor(CompilationUnit unit) {
+	public TraitementFor(CompilationUnit unit, List<EnhancedForStatement> forATraiter) {
 		this.unit=unit;
+		listFor = forATraiter;
 	}
 	
 	@Override
@@ -53,104 +57,94 @@ public class TraitementFor implements ICleanUpFix {
 		final ASTRewrite rewrite = ASTRewrite.create(ast);  //We create a new ASTRewrite, that will contain all our modification
 		
 		//We call the accept method on the AST, that will visit all the nodes, and use a personalized ASTVisitor to apply our changes
-		unit.accept(new ASTVisitor() {
-			@SuppressWarnings("unchecked")
-			@Override
-			public void endVisit(EnhancedForStatement node) {
-				
-				ITypeBinding t = ((SimpleName)node.getExpression()).resolveTypeBinding();
-				
-				MethodInvocation replaceMethod = ast.newMethodInvocation();
-				if(!t.isArray() && !containsCollection(t)) {
-					return;
-				}else {
-					if(containsCollection(t)) {
-						replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,node.getExpression())); //A eviter
-						replaceMethod.setName(ast.newSimpleName("stream"));
-					}
-					else {
-						if(t.isArray()) {
-							replaceMethod.arguments().add(((Expression) ASTNode.copySubtree(ast,node.getExpression()))); //A eviter
-							replaceMethod.setName(ast.newSimpleName("stream"));
-							replaceMethod.setExpression(ast.newSimpleName("Arrays"));
-						}
-						else {
-						}
-					}
+		
+		for(EnhancedForStatement node : listFor) {
+			
+			ITypeBinding t = ((SimpleName)node.getExpression()).resolveTypeBinding();
+			
+			MethodInvocation replaceMethod = ast.newMethodInvocation();
+			if(!t.isArray() && !containsCollection(t)) {
+				break;
+			}else {
+				if(containsCollection(t)) {
+					replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,node.getExpression())); //A eviter
+					replaceMethod.setName(ast.newSimpleName("stream"));
 				}
-				
-				//Creation of : <collection>.stream()
-				
-				// Method to copy an ASTNode and use it elsewhere : ASTNode.copySubtree(AST, nodeToCopy))
-				
-				
-				//Detection of the inside of the Enhanced For
-				if(node.getBody().getNodeType()==ASTNode.BLOCK) {
-					Block b = (Block) node.getBody();
-					if(b.statements().size()==1) { //If there is only one things inside
-						//TODO Rajouter un else pour mettre les choses dans le forEach
-						Statement insideBlock = (Statement) b.statements().get(0);
-						if(insideBlock.getNodeType()==ASTNode.IF_STATEMENT) { //If the only things inside is a If_Block
-							IfStatement insideIF = (IfStatement) insideBlock;
-							if(insideIF.getElseStatement()==null) { //Check if the IF Block doesn't have a Else
-								
-								//We create the Method Invocation of the filter on the stream invocation
-								MethodInvocation filterIF = ast.newMethodInvocation();
-								filterIF.setExpression(replaceMethod); //We call the filter method after the stream call
-								filterIF.setName(ast.newSimpleName("filter"));
-								
-								//We create the Lambda expression that will be inside the filter method
-								LambdaExpression conditionFilter = ast.newLambdaExpression();
-								conditionFilter.setBody(ASTNode.copySubtree(ast, insideIF.getExpression())); //We set the body of the lambda, same as the condition of the IF
-								conditionFilter.parameters().add(ASTNode.copySubtree(ast,node.getParameter())); //We set the parameter of the lambda, same as the Variable declaration of the Enhanced For
-								filterIF.arguments().add(conditionFilter); //We add the LambdaExpression to the call of the filter method
-								
-								//We create the method invocation for the forEach
-								MethodInvocation forEach = ast.newMethodInvocation();
-								forEach.setExpression(filterIF);//We call the forEach method after the filter call
-								forEach.setName(ast.newSimpleName("forEach"));
-								
-								//We create the Lambda expression that will be inside the filter method
-								LambdaExpression forEachCorps = ast.newLambdaExpression();
-								forEachCorps.setBody(ASTNode.copySubtree(ast, insideIF.getThenStatement())); //We create the body of the lambdaExpression of the forEach same as the then IF
-								forEachCorps.parameters().add(ASTNode.copySubtree(ast,node.getParameter())); //We set the parameter of the lambda, same as the Variable declaration of the Enhanced For
-								forEach.arguments().add(forEachCorps); //We add the LambdaExpression to the call of the forEach method
-								
-								
-								ExpressionStatement st = ast.newExpressionStatement(forEach);
-								rewrite.replace(node, st, null); //We add our modification to the record
-							}
-						}
+				else {
+					if(t.isArray()) {
+						replaceMethod.arguments().add(((Expression) ASTNode.copySubtree(ast,node.getExpression()))); //A eviter
+						replaceMethod.setName(ast.newSimpleName("stream"));
+						replaceMethod.setExpression(ast.newSimpleName("Arrays"));
 					}
-					else {
-						if(b.statements().size()>1) { //If there is more than one element present in the body of the Enhanced For
-							//There is no If, so there isn't a filter. We create directly the forEach Method
-							MethodInvocation forEach = ast.newMethodInvocation();
-							forEach.setExpression(replaceMethod);
-							forEach.setName(ast.newSimpleName("forEach"));
-							
-							//We create the Lambda Expression for the ForEach
-							LambdaExpression forEachCorps = ast.newLambdaExpression();
-							forEachCorps.setBody(ASTNode.copySubtree(ast, b));
-							forEachCorps.parameters().add(ASTNode.copySubtree(ast,node.getParameter()));
-							forEach.arguments().add(forEachCorps);
-							ExpressionStatement st = ast.newExpressionStatement(forEach);
-							rewrite.replace(node, st, null); //We add our modification to the record
-						}	
-					}	
 				}
 			}
-
-			private boolean containsCollection(ITypeBinding t) {
-				for (ITypeBinding i :t.getInterfaces()){
-					if(i.getBinaryName().contains("java.util.Collection")) {
-						System.out.println("LALALALA");
-						return true;
+			
+			//Creation of : <collection>.stream()
+			
+			// Method to copy an ASTNode and use it elsewhere : ASTNode.copySubtree(AST, nodeToCopy))
+			
+			
+			//Detection of the inside of the Enhanced For
+			if(node.getBody().getNodeType()==ASTNode.BLOCK) {
+				Block b = (Block) node.getBody();
+				if(b.statements().size()==1) { //If there is only one things inside
+					//TODO Rajouter un else pour mettre les choses dans le forEach
+					Statement insideBlock = (Statement) b.statements().get(0);
+					if(insideBlock.getNodeType()==ASTNode.IF_STATEMENT) { //If the only things inside is a If_Block
+						
+						IfStatement insideIF = (IfStatement) insideBlock;
+						if(insideIF.getElseStatement()==null) { //Check if the IF Block doesn't have a Else
+							System.out.println("parent du if : " + insideIF.getParent());
+							System.out.println("parent type : " + insideIF.getParent().getNodeType());
+							
+							//We create the Method Invocation of the filter on the stream invocation
+							MethodInvocation filterIF = ast.newMethodInvocation();
+							filterIF.setExpression(replaceMethod); //We call the filter method after the stream call
+							filterIF.setName(ast.newSimpleName("filter"));
+							
+							//We create the Lambda expression that will be inside the filter method
+							LambdaExpression conditionFilter = ast.newLambdaExpression();
+							conditionFilter.setBody(ASTNode.copySubtree(ast, insideIF.getExpression())); //We set the body of the lambda, same as the condition of the IF
+							conditionFilter.parameters().add(ASTNode.copySubtree(ast,node.getParameter())); //We set the parameter of the lambda, same as the Variable declaration of the Enhanced For
+							filterIF.arguments().add(conditionFilter); //We add the LambdaExpression to the call of the filter method
+							
+							//We create the method invocation for the forEach
+							MethodInvocation forEach = ast.newMethodInvocation();
+							forEach.setExpression(filterIF);//We call the forEach method after the filter call
+							forEach.setName(ast.newSimpleName("forEach"));
+							
+							//We create the Lambda expression that will be inside the filter method
+							LambdaExpression forEachCorps = ast.newLambdaExpression();
+							forEachCorps.setBody(ASTNode.copySubtree(ast, insideIF.getThenStatement())); //We create the body of the lambdaExpression of the forEach same as the then IF
+							forEachCorps.parameters().add(ASTNode.copySubtree(ast,node.getParameter())); //We set the parameter of the lambda, same as the Variable declaration of the Enhanced For
+							forEach.arguments().add(forEachCorps); //We add the LambdaExpression to the call of the forEach method
+							
+							
+							ExpressionStatement st = ast.newExpressionStatement(forEach);
+							rewrite.replace(node, st, null); //We add our modification to the record
+							//ASTNodes.replaceButKeepComment(rewrite, node, st, null);
+						}
 					}
 				}
-				return false;
-			}						
-		});
+				else {
+					if(b.statements().size()>1) { //If there is more than one element present in the body of the Enhanced For
+						//There is no If, so there isn't a filter. We create directly the forEach Method
+						MethodInvocation forEach = ast.newMethodInvocation();
+						forEach.setExpression(replaceMethod);
+						forEach.setName(ast.newSimpleName("forEach"));
+						
+						//We create the Lambda Expression for the ForEach
+						LambdaExpression forEachCorps = ast.newLambdaExpression();
+						forEachCorps.setBody(ASTNode.copySubtree(ast, b));
+						forEachCorps.parameters().add(ASTNode.copySubtree(ast,node.getParameter()));
+						forEach.arguments().add(forEachCorps);
+						ExpressionStatement st = ast.newExpressionStatement(forEach);
+						rewrite.replace(node, st, null); //We add our modification to the record
+						//ASTNodes.replaceButKeepComment(rewrite, node, st, null);
+					}	
+				}	
+			}
+		}
 		
 		return applicationChangement(rewrite); //Return a CompilationUnitChange that all our modification
 	}
@@ -171,6 +165,15 @@ public class TraitementFor implements ICleanUpFix {
 		}
 		
 	    return compilationUnitChange;	
+	}
+	
+	private boolean containsCollection(ITypeBinding t) {
+		for (ITypeBinding i :t.getInterfaces()){
+			if(i.getBinaryName().contains("java.util.Collection")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
