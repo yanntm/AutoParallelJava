@@ -16,8 +16,8 @@
       </cleanUpOptionsInitializer>
       
       <cleanUpConfigurationUI
-            class="fr.lip6.java.ui.TabPage"
-            name="%cleanUpConfigurationUI.name"
+            class="fr.lip6.pjava.refactor.ui.Lambda2ForCleanUpPage"
+            name="Transform Enhanced For"
             cleanUpKind="cleanUp">
       </cleanUpConfigurationUI>
       

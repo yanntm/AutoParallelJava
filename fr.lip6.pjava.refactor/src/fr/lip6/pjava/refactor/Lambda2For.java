@@ -93,13 +93,12 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 
 	@Override
 	public boolean canFix(ICompilationUnit compilationUnit, IProblemLocation problem) {
-		// TODO Auto-generated method stub
-		return false;
+		return fOptions.isEnabled("cleanup.transform_enhanced_for");
 	}
 
 	@Override
 	protected ICleanUpFix createFix(CompilationUnit unit) throws CoreException {
-		if(unit == null)return null;
+		if(unit == null && !fOptions.isEnabled("cleanup.transform_enhanced_for"))return null;
 		return Lambda2For.createCleanUp(unit);
 	}
 	
