@@ -71,11 +71,11 @@ public class Main {
 			p.anniversaire();
 		}
 		
-		/*for(Personne p:pers) {
+		for(Personne p:pers) {
 			for(Personne p: pers2) {
 				p.anniversaire();
 			}
-		}*/
+		}
 		
 		for(Personne p:pers) {
 			try {
