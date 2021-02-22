@@ -59,10 +59,7 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	}
 	
 	public CleanUpRequirements getRequirements() {
-		boolean changedRegionsRequired= false;
-		Map compilerOptions= null;
-		boolean isLambda2For = fOptions.isEnabled("cleanup.transform_enhanced_for"); //$NON-NLS-1$
-		return new CleanUpRequirements(isLambda2For, isLambda2For, changedRegionsRequired, compilerOptions);   
+		return new CleanUpRequirements(true, true, false, null);   
 	}
 	
 	public void setOptions(CleanUpOptions options) {
@@ -94,11 +91,10 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 				CompilationUnit cu = parse(icu);
 				
 				cu.accept(new ASTVisitor() {
-				@SuppressWarnings("unchecked")
 				@Override
 				public boolean visit(EnhancedForStatement node) {
 					
-					
+					System.out.println("In visit For enhanced");
 					ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
 					node.getBody().accept(visitorPreCond);
 					
@@ -139,7 +135,8 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 
 	@Override
 	protected ICleanUpFix createFix(CompilationUnit unit) throws CoreException {
-		if(unit == null && !fOptions.isEnabled("cleanup.transform_enhanced_for"))return null;
+		if(unit == null && !fOptions.isEnabled("cleanup.transform_enhanced_for")) {return null;}	
+		System.out.println( forATraiter.size()+"");
 		return Lambda2For.createCleanUp(unit, forATraiter);
 	}
 	

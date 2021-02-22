@@ -43,6 +43,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 				&& node.getParent().getParent() instanceof Block 
 				&& node.getParent().getParent().getParent().equals(caller);
 		if(!childWhitoutElse) {
+			System.out.println("False dans ifStatement");
 			isUpgradable = false;
 			return false;
 		}
@@ -51,6 +52,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 
 	@Override
 	public  boolean visit(ReturnStatement node) {
+		System.out.println("faux dans return");
 		isUpgradable = false;
 		return false;
 	}
@@ -69,6 +71,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			parent = parent.getParent();
 		}
 		if(parent.equals(caller)) {
+			System.out.println("Faux dans BreakStatement");
 			isUpgradable = false;
 		}
 		return false;
@@ -82,6 +85,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		ArrayList<String> exceptions = new ArrayList<String>();
 		exceptions.add(exceptionThrowed);
 		if(!verifException(exceptions, parent)) {
+			System.out.println("faux dans throwstatement");
 			isUpgradable = false;
 		}
 		return false;
@@ -94,7 +98,9 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		for(ITypeBinding b : node.resolveMethodBinding().getExceptionTypes()) {
 			exceptions.add(b.getQualifiedName());
 		}
+		System.out.println("taille exception " + exceptions.size());
 		if(!verifException(exceptions, parent)) {
+			System.out.println("faux dans Method InvocationStatement");
 			isUpgradable = false;
 		}
 		return false;
@@ -111,13 +117,14 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			exceptions.add(b.getQualifiedName());
 		}
 		if(!verifException(exceptions, parent)) {
+			System.out.println("faux dans classInstanceCreation");
 			isUpgradable = false;
 		}
 		return false;
 	}
 
 	private boolean verifException(List<String> exceptions, ASTNode parent) {
-
+		if (exceptions.size()==0) return true;
 		while(parent != caller) {
 			if (parent.getNodeType() == ASTNode.TRY_STATEMENT) {
 				TryStatement tryStat = (TryStatement) parent;

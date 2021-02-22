@@ -32,7 +32,7 @@ public class Lambda2ForCleanUpPage implements ICleanUpConfigurationUI {
 		final Button b = new Button(c, SWT.CHECK);
 		b.setText("Activer la transformation des boucles for");
 		if(fOptions.isEnabled("cleanup.transform_enhanced_for")) b.setSelection(true);
-		b.addSelectionListener(new SelectionListener() {
+		/*b.addSelectionListener(new SelectionListener() {
 			
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -48,7 +48,7 @@ public class Lambda2ForCleanUpPage implements ICleanUpConfigurationUI {
 				// TODO Auto-generated method stub
 				
 			}
-		});
+		});*/
 		
 		return c;
 	}
