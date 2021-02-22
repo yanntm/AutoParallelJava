@@ -10,6 +10,17 @@
             id="fr.lip6.pjava.refactor.cleanUp1">
       </cleanUp>
       
+      <cleanUpOptionsInitializer
+            class="fr.lip6.pjava.refactor.ui.Lambda2ForInitializer"
+            cleanUpKind="cleanUp">
+      </cleanUpOptionsInitializer>
+      
+      <cleanUpConfigurationUI
+            class="fr.lip6.java.ui.TabPage"
+            name="%cleanUpConfigurationUI.name"
+            cleanUpKind="cleanUp">
+      </cleanUpConfigurationUI>
+      
    </extension>
 
 </plugin>
