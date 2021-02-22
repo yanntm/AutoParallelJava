@@ -88,6 +88,7 @@ public class TraitementFor implements ICleanUpFix {
 				if(node.getBody().getNodeType()==ASTNode.BLOCK) {
 					Block b = (Block) node.getBody();
 					if(b.statements().size()==1) { //If there is only one things inside
+						//TODO Rajouter un else pour mettre les choses dans le forEach
 						Statement insideBlock = (Statement) b.statements().get(0);
 						if(insideBlock.getNodeType()==ASTNode.IF_STATEMENT) { //If the only things inside is a If_Block
 							IfStatement insideIF = (IfStatement) insideBlock;
