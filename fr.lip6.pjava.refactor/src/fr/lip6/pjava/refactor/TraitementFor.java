@@ -50,41 +50,43 @@ public class TraitementFor implements ICleanUpFix {
 		final ASTRewrite rewrite = ASTRewrite.create(ast);  //We create a new ASTRewrite, that will contain all our modification
 		
 		//We call the accept method on the AST, that will visit all the nodes, and use a personalized ASTVisitor to apply our changes
-		
+		System.out.println(listFor.size() +" TAILLLLE");
 		for(EnhancedForStatement node : listFor) {
-			ITypeBinding t = ((SimpleName)node.getExpression()).resolveTypeBinding();//truc qui ne marche pas
+			ITypeBinding t = ((SimpleName)node.getExpression()).resolveTypeBinding();
 			
 			//Verification du type de tableau sur lequel on veut stream
 			MethodInvocation replaceMethod = ast.newMethodInvocation();
-			if(!t.isArray() && !containsCollection(t)) {
-				break;
-			}else {
-				if(containsCollection(t)) {
-					replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,node.getExpression())); //A eviter
-					replaceMethod.setName(ast.newSimpleName("stream"));
-				}
-				else {
-					if(t.isArray()) {
-						replaceMethod.arguments().add(((Expression) ASTNode.copySubtree(ast,node.getExpression()))); //A eviter
-						replaceMethod.setName(ast.newSimpleName("stream"));
-						replaceMethod.setExpression(ast.newSimpleName("Arrays"));
-					}
-				}
-			}
-			
+			detectCollectionType(ast, node, t, replaceMethod);
+			if(replaceMethod == null) break;
 			//Creation of : <collection>.stream()
 			
 			// Method to copy an ASTNode and use it elsewhere : ASTNode.copySubtree(AST, nodeToCopy))
+			TraitementForBody tfb = new TraitementForBody(node, ast);
+			node.getBody().accept(tfb);
 			
 			
 			//There is no If, so there isn't a filter. We create directly the forEach Method
 			MethodInvocation forEach = ast.newMethodInvocation();
-			forEach.setExpression(replaceMethod);
+			
 			forEach.setName(ast.newSimpleName("forEach"));
 			
+			if(tfb.getFirst()!=null && tfb.getLast()!=null) {
+				tfb.getFirst().setExpression(replaceMethod);
+				forEach.setExpression(tfb.getLast());
+			}else {
+				if(tfb.getFirst()!=null) {
+					tfb.getFirst().setExpression(replaceMethod);
+					forEach.setExpression(tfb.getFirst());
+				}
+				else {
+					forEach.setExpression(replaceMethod);
+				}
+				
+			}
+				
 			//We create the Lambda Expression for the ForEach
 			LambdaExpression forEachCorps = ast.newLambdaExpression();
-			forEachCorps.setBody(ASTNode.copySubtree(ast, node.getBody()));
+			forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody()));
 			forEachCorps.parameters().add(ASTNode.copySubtree(ast,node.getParameter()));
 			forEach.arguments().add(forEachCorps);
 			ExpressionStatement st = ast.newExpressionStatement(forEach);
@@ -92,6 +94,31 @@ public class TraitementFor implements ICleanUpFix {
 		}
 		
 		return applicationChangement(rewrite); //Return a CompilationUnitChange that all our modification
+	}
+
+	/**
+	 * @param ast
+	 * @param node
+	 * @param t
+	 * @param replaceMethod
+	 */
+	private void detectCollectionType(AST ast, EnhancedForStatement node, ITypeBinding t,
+			MethodInvocation replaceMethod) {
+		if(!t.isArray() && !containsCollection(t)) {
+			replaceMethod = null;
+		}else {
+			if(containsCollection(t)) {
+				replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,node.getExpression())); 
+				replaceMethod.setName(ast.newSimpleName("stream"));
+			}
+			else {
+				if(t.isArray()) {
+					replaceMethod.arguments().add(((Expression) ASTNode.copySubtree(ast,node.getExpression())));
+					replaceMethod.setName(ast.newSimpleName("stream"));
+					replaceMethod.setExpression(ast.newSimpleName("Arrays"));
+				}
+			}
+		}
 	}
 	
 	/**
