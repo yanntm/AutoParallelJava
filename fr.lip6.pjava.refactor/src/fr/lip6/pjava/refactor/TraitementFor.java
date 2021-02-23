@@ -1,30 +1,22 @@
 package fr.lip6.pjava.refactor;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
-import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
-import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.text.edits.TextEdit;
 
@@ -51,6 +43,7 @@ public class TraitementFor implements ICleanUpFix {
 		listFor = forATraiter;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public CompilationUnitChange createChange(IProgressMonitor progressMonitor) throws CoreException {
 		AST ast = unit.getAST();   //We obtain the AST from the CompilationUnit. The will be use as a factory
@@ -59,7 +52,6 @@ public class TraitementFor implements ICleanUpFix {
 		//We call the accept method on the AST, that will visit all the nodes, and use a personalized ASTVisitor to apply our changes
 		
 		for(EnhancedForStatement node : listFor) {
-			System.out.println(node);
 			ITypeBinding t = ((SimpleName)node.getExpression()).resolveTypeBinding();//truc qui ne marche pas
 			
 			//Verification du type de tableau sur lequel on veut stream

@@ -10,8 +10,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
 
 public class Lambda2ForCleanUpPage implements ICleanUpConfigurationUI {
 	 private CleanUpOptions fOptions;
@@ -32,23 +30,26 @@ public class Lambda2ForCleanUpPage implements ICleanUpConfigurationUI {
 		final Button b = new Button(c, SWT.CHECK);
 		b.setText("Activer la transformation des boucles for");
 		if(fOptions.isEnabled("cleanup.transform_enhanced_for")) b.setSelection(true);
-		/*b.addSelectionListener(new SelectionListener() {
+		b.addSelectionListener(new SelectionListener() {
 			
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if(b.getSelection()) {
 					fOptions.setOption("cleanup.transform_enhanced_for", CleanUpOptionsCore.TRUE);
+					System.out.println("Vrai");
 				}else {
+					System.out.println("FAUX");
 					fOptions.setOption("cleanup.transform_enhanced_for", CleanUpOptionsCore.FALSE);
 				}
 			}
-			
+
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				// TODO Auto-generated method stub
 				
 			}
-		});*/
+
+		});
 		
 		return c;
 	}

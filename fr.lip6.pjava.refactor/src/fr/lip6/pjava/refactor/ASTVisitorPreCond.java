@@ -5,21 +5,15 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.BreakStatement;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
-import org.eclipse.jdt.core.dom.EnhancedForStatement;
-import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.TryStatement;
-import org.eclipse.jdt.core.dom.WhileStatement;
 
 public class ASTVisitorPreCond extends ASTVisitor {
 
@@ -52,7 +46,6 @@ public class ASTVisitorPreCond extends ASTVisitor {
 
 	@Override
 	public  boolean visit(ReturnStatement node) {
-		System.out.println("faux dans return");
 		isUpgradable = false;
 		return false;
 	}
@@ -71,7 +64,6 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			parent = parent.getParent();
 		}
 		if(parent.equals(caller)) {
-			System.out.println("Faux dans BreakStatement");
 			isUpgradable = false;
 		}
 		return false;
@@ -85,7 +77,6 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		ArrayList<String> exceptions = new ArrayList<String>();
 		exceptions.add(exceptionThrowed);
 		if(!verifException(exceptions, parent)) {
-			System.out.println("faux dans throwstatement");
 			isUpgradable = false;
 		}
 		return false;
@@ -100,7 +91,6 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		}
 		System.out.println("taille exception " + exceptions.size());
 		if(!verifException(exceptions, parent)) {
-			System.out.println("faux dans Method InvocationStatement");
 			isUpgradable = false;
 		}
 		return false;
@@ -117,7 +107,6 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			exceptions.add(b.getQualifiedName());
 		}
 		if(!verifException(exceptions, parent)) {
-			System.out.println("faux dans classInstanceCreation");
 			isUpgradable = false;
 		}
 		return false;
