@@ -3,6 +3,7 @@ package fr.lip6.pjava.refactor;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.LambdaExpression;
@@ -23,7 +24,7 @@ public class TraitementForBody extends ASTVisitor {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean visit(IfStatement node) {
-		if(node.getElseStatement()==null) {
+		if(node.getElseStatement()==null && ((Block)node.getParent()).statements().size()==1) {
 			if(first==null) {
 				first = ast.newMethodInvocation();
 				first.setName(ast.newSimpleName("filter"));

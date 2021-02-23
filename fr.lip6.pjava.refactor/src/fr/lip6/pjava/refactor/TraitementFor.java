@@ -86,7 +86,8 @@ public class TraitementFor implements ICleanUpFix {
 				
 			//We create the Lambda Expression for the ForEach
 			LambdaExpression forEachCorps = ast.newLambdaExpression();
-			forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody()));
+			if(tfb.getBody()!=null) forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody()));
+			else forEachCorps.setBody(ASTNode.copySubtree(ast, node.getBody()));
 			forEachCorps.parameters().add(ASTNode.copySubtree(ast,node.getParameter()));
 			forEach.arguments().add(forEachCorps);
 			ExpressionStatement st = ast.newExpressionStatement(forEach);
