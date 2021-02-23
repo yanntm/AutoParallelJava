@@ -36,7 +36,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	}
 
 	//Traitement du else
-	@Override
+	/*@Override
 	public  boolean visit(IfStatement node) {
 		boolean childWhitoutElse = node.getElseStatement() == null
 				&& node.getParent() instanceof Statement
@@ -48,7 +48,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			return false;
 		}
 		return true;
-	}
+	}*/
 
 	@Override
 	public  boolean visit(ReturnStatement node) {

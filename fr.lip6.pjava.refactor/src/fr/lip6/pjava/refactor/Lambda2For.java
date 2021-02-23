@@ -71,14 +71,17 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	/**
 	 * Parse a ICompilationUnit to a CompilationUnit, use to generate an AST 
 	 * @param lwUnit the source file we want to parse
+	 * @param monitor 
 	 * @return the AST generated
 	 */
-	protected CompilationUnit parse(ICompilationUnit lwUnit) {
+	protected CompilationUnit parse(ICompilationUnit lwUnit, IProgressMonitor monitor) {
 		ASTParser parser = ASTParser.newParser(AST.JLS15);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		parser.setSource(lwUnit);
+		parser.setBindingsRecovery(true);
 		parser.setResolveBindings(true);
-		return (CompilationUnit) parser.createAST(null);
+		parser.setStatementsRecovery(true);
+		return (CompilationUnit) parser.createAST(monitor);
 	}
 
 	@Override
@@ -86,28 +89,6 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			IProgressMonitor monitor) throws CoreException {
 		if (fOptions.isEnabled("cleanup.transform_enhanced_for")) { //$NON-NLS-1$
 			fStatus= new RefactoringStatus();
-	
-			for( ICompilationUnit icu : compilationUnits) {
-				CompilationUnit cu = parse(icu);
-				
-				cu.accept(new ASTVisitor() {
-				@Override
-				public boolean visit(EnhancedForStatement node) {
-					
-					System.out.println("In visit For enhanced");
-					ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
-					node.getBody().accept(visitorPreCond);
-					
-					if (visitorPreCond.isUpgradable())
-					{
-						forATraiter.add(node);
-					}
-					return false;
-				}
-						
-			});
-				
-			}
 			
 		}
 		
@@ -134,10 +115,27 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	}
 
 	@Override
-	protected ICleanUpFix createFix(CompilationUnit unit) throws CoreException {
-		if(unit == null && !fOptions.isEnabled("cleanup.transform_enhanced_for")) {return null;}	
-		System.out.println( forATraiter.size()+"");
-		return Lambda2For.createCleanUp(unit, forATraiter);
+	protected ICleanUpFix createFix(CompilationUnit cu) throws CoreException {
+		if(cu == null && !fOptions.isEnabled("cleanup.transform_enhanced_for")) {return null;}
+		
+		cu.accept(new ASTVisitor() {
+			@Override
+			public boolean visit(EnhancedForStatement node) {
+				
+				System.out.println("In visit For enhanced");
+				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
+				node.getBody().accept(visitorPreCond);
+				
+				if (visitorPreCond.isUpgradable())
+				{
+					forATraiter.add(node);
+				}
+				return false;
+			}
+					
+		});
+		
+		return Lambda2For.createCleanUp(cu, forATraiter);
 	}
 	
 

@@ -35,7 +35,6 @@ public class Main {
 			}
 		}
 		
-		Personne 
 		//TEST4
 		Personne pp;
 		for(Personne p:pers) {
@@ -54,7 +53,6 @@ public class Main {
 			if(p.age==0) {
 				p.anniversaire();
 				p.anniversaire();
-				}
 			}
 		}
 		
@@ -64,24 +62,25 @@ public class Main {
 			p.anniversaire();
 		}
 		
-		for(Personne p:pers) {
+		for(Personne p1:pers) {
 			for(int i =0; i<10; i++) {
-				p.anniversaire();
+				p1.anniversaire();
 			}
-			p.anniversaire();
+			p1.anniversaire();
 		}
 		
 		for(Personne p:pers) {
-			for(Personne p: pers2) {
-				p.anniversaire();
+			Personne[] pers2 = new Personne[10];
+			for(Personne p1: pers2) {
+				p1.anniversaire();
 			}
 		}
 		
-		for(Personne p:pers) {
+		for(Personne p1:pers) {
 			try {
 				dodo();
-				p.anniversaire2();
-				Personne pp = new Personne(120);
+				p1.anniversaire2();
+				Personne pp1 = new Personne(120);
 				throw new Exception();
 			}catch (IllegalAccessException e) {
 				// TODO: handle exception
@@ -133,6 +132,10 @@ public class Main {
 			this.age = age;
 		}
 		
+		public Personne() {
+			// TODO Auto-generated constructor stub
+		}
+
 		void anniversaire() {
 			age++;
 		}
