@@ -18,76 +18,79 @@ public class Main {
 		}
 		
 		
-		//Test 1
-		for(Integer i:l) {
-			
-		}
-		
-		//TEST 2 
-		for(Personne p:pers) {
-			p.anniversaire();
-		}
+//		//Test 1
+//		for(Integer i:l) {
+//			
+//		}
+//		
+//		//TEST 2 
+//		for(Personne p:pers) {
+//			p.anniversaire();
+//		}
 		
 		//Test 3
 		for(Personne p:pers) {
 			if(p.age==0) {
 				p.anniversaire();
 			}
+			System.out.println("p");
 		}
 		
-		//TEST4
-		Personne pp;
-		for(Personne p:pers) {
-			if(p.age==0) {
-				p.anniversaire();
-				pp = new Personne();
-				
-			}else {
-				
-			}
-		}
+//		//TEST4
+//		Personne pp;
+//		for(Personne p:pers) {
+//			if(p.age==0) {
+//				p.anniversaire();
+//				pp = new Personne();
+//				
+//			}else {
+//				
+//			}
+//		}
 		
 		//Test 5
 		
 		for(Personne p:pers) {
 			if(p.age==0) {
-				p.anniversaire();
-				p.anniversaire();
+				if(p.sexe) {
+					p.anniversaire();
+					p.anniversaire();
+				}
 			}
 		}
 		
-		//TEST6
-		for(Personne p:pers) {
-			p.anniversaire();
-			p.anniversaire();
-		}
-		
-		for(Personne p1:pers) {
-			for(int i =0; i<10; i++) {
-				p1.anniversaire();
-			}
-			p1.anniversaire();
-		}
-		
-		for(Personne p:pers) {
-			Personne[] pers2 = new Personne[10];
-			for(Personne p1: pers2) {
-				p1.anniversaire();
-			}
-		}
-		
-		for(Personne p1:pers) {
-			try {
-				dodo();
-				p1.anniversaire2();
-				Personne pp1 = new Personne(120);
-				throw new Exception();
-			}catch (IllegalAccessException e) {
-				// TODO: handle exception
-			} catch (Exception e1) {
-				
-			}
-		}
+//		//TEST6
+//		for(Personne p:pers) {
+//			p.anniversaire();
+//			p.anniversaire();
+//		}
+//		
+//		for(Personne p1:pers) {
+//			for(int i =0; i<10; i++) {
+//				p1.anniversaire();
+//			}
+//			p1.anniversaire();
+//		}
+//		
+//		for(Personne p:pers) {
+//			Personne[] pers2 = new Personne[10];
+//			for(Personne p1: pers2) {
+//				p1.anniversaire();
+//			}
+//		}
+//		
+//		for(Personne p1:pers) {
+//			try {
+//				dodo();
+//				p1.anniversaire2();
+//				Personne pp1 = new Personne(120);
+//				throw new Exception();
+//			}catch (IllegalAccessException e) {
+//				// TODO: handle exception
+//			} catch (Exception e1) {
+//				
+//			}
+//		}
 
 		//Voulue
 		//Pour le Test1, il ne doit proposer aucun changement doit 
@@ -124,6 +127,7 @@ public class Main {
 	
 	public static class Personne{
 		public int age=0;
+		public boolean sexe = true;
 		
 		Personne(int age) throws IllegalArgumentException {
 			if (age> 100) {
