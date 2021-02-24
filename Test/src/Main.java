@@ -143,8 +143,76 @@ public class Main {
 			p.anniversaire();
 			p.anniversaire();
 		});
+			
+		
+		
+		// Break
+		
+		for(Personne p : pers) {
+			if(p.age < 2 ) {
+				break;
+			}
+			p.anniversaire();
+		}
+		
+		for(Personne p1 :pers) {
+			for(Personne p : pers) {
+				if(p.age < 2 ) {
+					break;
+				}
+				p.anniversaire();
+			}
+		}
+		
+		// Continue
+		
+		for(Personne p : pers) {
+			if(p.age < 2 ) {
+				continue;
+			}
+			p.anniversaire();
+		}
+		
+		for(Personne p1 :pers) {
+			for(Personne p : pers) {
+				if(p.age < 2 ) {
+					continue;
+				}
+				p.anniversaire();
+			}
+		}
+		
+		// Test Affectation 
+		
+		//non
+		int somme = 0;
+		for(Personne p : pers) {
+			somme = p.age;
+		}
+		somme = 0;
+		for(Personne p : pers) {
+			somme += p.age;
+		}
+		somme = 0;
+		for(Personne p : pers) {
+			somme++;
+		}
+		//oui
+		somme = 1;
+		for(Personne p : pers) {
+			p.age = somme;
+		}
+		
+		for(Personne p : pers) {
+			int age = p.age;
+			while(age > 0) {
+				System.out.println("a="+a);
+				age--;
+			}
+		}
 		
 	}
+	
 		
 		
 	
