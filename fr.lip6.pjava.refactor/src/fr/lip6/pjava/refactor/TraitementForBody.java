@@ -9,13 +9,37 @@ import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
+/**
+ * Class used to verify the inside of the forEach and to create the filter
+ * @author Teillet & Capitanio
+ *
+ */
 public class TraitementForBody extends ASTVisitor {
+	/**
+	 * The parent that called the transformation
+	 */
 	private ASTNode parent;
+	/**
+	 * The AST in which the transformation is done
+	 */
 	private AST ast;
+	/**
+	 * Use if their is multiple filter that chain
+	 */
 	private MethodInvocation last=null;
+	/**
+	 * Use for the first filter
+	 */
 	private MethodInvocation first=null;
+	/**
+	 * the body of the last if
+	 */
 	private ASTNode body = null;
-	
+	/**
+	 * The constructor used to initialize all the attributes
+	 * @param parent the parent who call the operation
+	 * @param ast the in which we do the operation
+	 */
 	public TraitementForBody(ASTNode parent, AST ast) {
 		this.parent = parent;
 		this.ast = ast;
@@ -62,14 +86,26 @@ public class TraitementForBody extends ASTVisitor {
 		return true;
 	}
 	
+	/**
+	 * Return the last filter
+	 * @return the last filter, none if there are only a filter
+	 */
 	public MethodInvocation getLast() {
 		return last;
 	}
 	
+	/**
+	 * The first filter
+	 * @return the first filter, none if there are no filter
+	 */
 	public MethodInvocation getFirst() {
 		return first;
 	}
 	
+	/**
+	 * Return the body of the last if
+	 * @return the body of the last if
+	 */
 	public ASTNode getBody() {
 		return body;
 	}

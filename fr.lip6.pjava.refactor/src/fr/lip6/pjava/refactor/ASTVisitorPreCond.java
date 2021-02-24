@@ -16,42 +16,44 @@ import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.TryStatement;
 
+/**
+ * Class use to check the enhancedFor if this is possible to transform them
+ * @author Teillet & Capitanio
+ *
+ */
 public class ASTVisitorPreCond extends ASTVisitor {
-
+	/**
+	 * Use to verify if the enhancedFor can be upgradable
+	 */
 	private boolean isUpgradable;
+	/**
+	 * We keep the caller to be sure to not verify things outside of the EnhancedFor
+	 */
 	private ASTNode caller;
 	
+	/**
+	 * The constructor use to initiate the attributes
+	 * @param caller this the node calling this object
+	 */
 	public ASTVisitorPreCond(ASTNode caller) {
 		isUpgradable = true;
 		this.caller = caller;
 	}
 
+	/**
+	 * Return if the given EnhancedFor is Upgradable
+	 * @return if the given EnhancedFor is Upgradable
+	 */
 	public boolean isUpgradable() {
 		return isUpgradable;
 	}
-
-	//Traitement du else
-	/*@Override
-	public  boolean visit(IfStatement node) {
-		boolean childWhitoutElse = node.getElseStatement() == null
-				&& node.getParent() instanceof Statement
-				&& node.getParent().getParent() instanceof Block 
-				&& node.getParent().getParent().getParent().equals(caller);
-		if(!childWhitoutElse) {
-			System.out.println("False dans ifStatement");
-			isUpgradable = false;
-			return false;
-		}
-		return true;
-	}*/
-
+	
+	//Traitement des sortie anticipees
 	@Override
 	public  boolean visit(ReturnStatement node) {
 		isUpgradable = false;
 		return false;
 	}
-	
-	//Traitement des sortie anticipees
 	
 	@Override
 	public  boolean visit(BreakStatement node) {
@@ -69,7 +71,15 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		}
 		return false;
 	}
+	
+	@Override
+	public boolean visit(ContinueStatement node) {
+		// TODO Auto-generated method stub
+		return super.visit(node);
+	}
 
+	//Traitement des exceptions qui peuvent sortir de la boucle for
+	
 	@Override
 	public  boolean visit(ThrowStatement node) {
 		ASTNode parent = node.getParent();
@@ -82,7 +92,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		}
 		return false;
 	}
-
+	
 	@Override
 	public boolean visit(MethodInvocation node) {
 		ASTNode parent = node.getParent();
@@ -110,12 +120,13 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		return false;
 	}
 	
-	@Override
-	public boolean visit(ContinueStatement node) {
-		// TODO Auto-generated method stub
-		return super.visit(node);
-	}
 
+	/**
+	 * Check if the given Exceptions are catched inside the enhancedFor
+	 * @param exceptions The exceptions we are looking for
+	 * @param parent the parent node of the node we are looking at
+	 * @return if all the exceptions are handles inside the enhancedFor 
+	 */
 	private boolean verifException(List<String> exceptions, ASTNode parent) {
 		if (exceptions.size()==0) return true;
 		while(parent != caller) {

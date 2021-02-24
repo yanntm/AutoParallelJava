@@ -11,8 +11,16 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 
+/**
+ * Class use to create the configurationUI Page
+ * @author Teillet & Capitanio
+ *
+ */
 public class Lambda2ForCleanUpPage implements ICleanUpConfigurationUI {
-	 private CleanUpOptions fOptions;
+	/**
+	 *  Options of the environment
+	 */
+	private CleanUpOptions fOptions;
 	@Override
 	public void setOptions(CleanUpOptions options) {
 		this.fOptions = options;
@@ -21,34 +29,29 @@ public class Lambda2ForCleanUpPage implements ICleanUpConfigurationUI {
 
 	@Override
 	public Composite createContents(Composite parent) {
+		//The thing that will contains all the element of our page
 		final Composite c = new Composite(parent, SWT.NONE);
 		c.setLayout(new GridLayout(1, false));
 		c.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		
-		//final Group g = new Group(parent, SWT.NONE);
-		//final Label l = new Label(g, SWT.NONE);
+		//The check Button
 		final Button b = new Button(c, SWT.CHECK);
 		b.setText("Activer la transformation des boucles for");
+		
+		//The default value of the check box
 		if(fOptions.isEnabled("cleanup.transform_enhanced_for")) b.setSelection(true);
 		b.addSelectionListener(new SelectionListener() {
-			
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if(b.getSelection()) {
 					fOptions.setOption("cleanup.transform_enhanced_for", CleanUpOptionsCore.TRUE);
-					System.out.println("Vrai");
 				}else {
-					System.out.println("FAUX");
 					fOptions.setOption("cleanup.transform_enhanced_for", CleanUpOptionsCore.FALSE);
 				}
 			}
 
 			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-
+			public void widgetDefaultSelected(SelectionEvent e) {} // Useless but have to be here
 		});
 		
 		return c;

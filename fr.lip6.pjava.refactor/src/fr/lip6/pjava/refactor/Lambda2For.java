@@ -23,7 +23,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
 /**
  * Class that will be call when we ask for a Clean-Up
- * @author teill
+ * @author Teillet & Capitanio
  *
  */
 @SuppressWarnings("restriction")
@@ -32,9 +32,6 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	private RefactoringStatus fStatus;
 	List<EnhancedForStatement> forATraiter = new ArrayList<EnhancedForStatement>();
 	
-	public Lambda2For() {
-		// TODO Auto-generated constructor stub
-	}
 	
 	@Override
 	public String[] getStepDescriptions() {
@@ -44,10 +41,12 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		return null;
 	}
 	
+	@Override
 	public CleanUpRequirements getRequirements() {
 		return new CleanUpRequirements(true, true, false, null);   
 	}
 	
+	@Override
 	public void setOptions(CleanUpOptions options) {
 		Assert.isLegal(options != null);
 		Assert.isTrue(fOptions == null);
@@ -123,13 +122,18 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	}
 	
 
+	/**
+	 * Method use to call our operation on the unit
+	 * @param unit the CompilationUnit on the one we our doing transformation
+	 * @param forATraiter the list of enhancedFor that we will transform
+	 * @return the changement made on the AST
+	 */
 	private static ICleanUpFix createCleanUp(CompilationUnit unit, List<EnhancedForStatement> forATraiter) {
 		return new TraitementFor(unit, forATraiter);
 	}
 
 	@Override
 	protected ICleanUpFix createFix(CompilationUnit unit, IProblemLocation[] problems) throws CoreException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

@@ -55,8 +55,8 @@ public class TraitementFor implements ICleanUpFix {
 			ITypeBinding t = ((SimpleName)node.getExpression()).resolveTypeBinding();
 			
 			//Verification du type de tableau sur lequel on veut stream
-			MethodInvocation replaceMethod = ast.newMethodInvocation();
-			detectCollectionType(ast, node, t, replaceMethod);
+			MethodInvocation replaceMethod = detectCollectionType(ast, node, t);
+			
 			if(replaceMethod == null) break;
 			//Creation of : <collection>.stream()
 			
@@ -98,28 +98,34 @@ public class TraitementFor implements ICleanUpFix {
 	}
 
 	/**
-	 * @param ast
-	 * @param node
-	 * @param t
-	 * @param replaceMethod
+	 * Detect the type of the array 
+	 * @param ast The ast that we are in
+	 * @param node The node we are looking at
+	 * @param t the type of the array
+	 * @return a new method Invocation fill with the good parameter or null if it is not an array
 	 */
-	private void detectCollectionType(AST ast, EnhancedForStatement node, ITypeBinding t,
-			MethodInvocation replaceMethod) {
+	@SuppressWarnings("unchecked")
+	private MethodInvocation detectCollectionType(AST ast, EnhancedForStatement node, ITypeBinding t) {
 		if(!t.isArray() && !containsCollection(t)) {
-			replaceMethod = null;
+			return null;
 		}else {
 			if(containsCollection(t)) {
+				MethodInvocation replaceMethod = ast.newMethodInvocation();
 				replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,node.getExpression())); 
 				replaceMethod.setName(ast.newSimpleName("stream"));
+				return replaceMethod;
 			}
 			else {
 				if(t.isArray()) {
-					replaceMethod.arguments().add(((Expression) ASTNode.copySubtree(ast,node.getExpression())));
+					MethodInvocation replaceMethod = ast.newMethodInvocation();
+					replaceMethod.arguments().add( ASTNode.copySubtree(ast,node.getExpression()));
 					replaceMethod.setName(ast.newSimpleName("stream"));
 					replaceMethod.setExpression(ast.newSimpleName("Arrays"));
+					return replaceMethod;
 				}
 			}
 		}
+		return null;
 	}
 	
 	/**
@@ -140,6 +146,11 @@ public class TraitementFor implements ICleanUpFix {
 	    return compilationUnitChange;	
 	}
 	
+	/**
+	 * Method uses to verify if the type t is a Collection
+	 * @param t the type we want to check
+	 * @return if t is a Collection
+	 */
 	private boolean containsCollection(ITypeBinding t) {
 		for (ITypeBinding i :t.getInterfaces()){
 			if(i.getBinaryName().contains("java.util.Collection")) {
