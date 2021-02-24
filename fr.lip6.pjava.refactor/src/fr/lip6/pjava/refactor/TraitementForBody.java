@@ -58,7 +58,6 @@ public class TraitementForBody extends ASTVisitor {
 
 			}
 			body = node.getThenStatement();
-			System.out.println(last);
 		}
 		return true;
 	}

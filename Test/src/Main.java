@@ -86,6 +86,34 @@ public class Main {
 				
 			}
 		}
+		
+		try {
+			for(Personne p1:pers) {
+				try {
+					dodo();
+					p1.anniversaire2();
+					Personne pp1 = new Personne(120);
+					throw new Exception();
+				}catch (IllegalAccessException e) {
+					// TODO: handle exception
+				} 
+			}
+		}catch(Exception e) {
+		}
+		
+		
+		int a = 0;
+		for(Personne p:pers) {
+			a+=p.age;
+		}
+		
+		pers.stream().forEach(e->a+=e.age);
+		
+		for(Personne p:pers) {
+			int b = 0, c=1;
+			b+=p.age;
+		}
+		
 
 		//Voulue
 		//Pour le Test1, il ne doit proposer aucun changement doit 

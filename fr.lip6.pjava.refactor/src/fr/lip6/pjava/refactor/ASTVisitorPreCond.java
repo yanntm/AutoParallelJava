@@ -8,6 +8,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.BreakStatement;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.ContinueStatement;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -96,9 +97,6 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		return false;
 	}
 	
-	
-	
-	
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
 		ASTNode parent = node.getParent();
@@ -110,6 +108,12 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			isUpgradable = false;
 		}
 		return false;
+	}
+	
+	@Override
+	public boolean visit(ContinueStatement node) {
+		// TODO Auto-generated method stub
+		return super.visit(node);
 	}
 
 	private boolean verifException(List<String> exceptions, ASTNode parent) {
