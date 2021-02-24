@@ -107,7 +107,6 @@ public class Main {
 			a+=p.age;
 		}
 		
-		pers.stream().forEach(e->a+=e.age);
 		
 		for(Personne p:pers) {
 			int b = 0, c=1;
