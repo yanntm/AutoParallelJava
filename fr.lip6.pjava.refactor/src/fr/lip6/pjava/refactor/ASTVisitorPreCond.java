@@ -78,7 +78,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 				return true;
 			}
 		} else if(left instanceof SimpleName){
-			varKey = ((QualifiedName) left).getQualifier().resolveBinding().getKey();
+			varKey = ((SimpleName) left).resolveBinding().getKey();
 		}
 		
 		if(!varDeclaredInFor.contains(varKey)) {
