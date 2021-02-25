@@ -14,6 +14,8 @@ import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -71,6 +73,50 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		//no problems with the for parameter variables 
 		String paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
 		Expression left = node.getLeftHandSide();
+		String varKey = null;
+		if(left instanceof QualifiedName) {
+			varKey = ((QualifiedName) left).getQualifier().resolveBinding().getKey();
+			if(paramterKey == varKey) {
+				return true;
+			}
+		} else if(left instanceof SimpleName){
+			varKey = ((SimpleName) left).resolveBinding().getKey();
+		}
+		
+		if(!varDeclaredInFor.contains(varKey)) {
+			isUpgradable = false;
+			return false;
+		}
+		return true;
+	}
+	
+	@Override
+	public boolean visit(PrefixExpression node) {
+		//no problems with the for parameter variables 
+		String paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+		Expression left = node.getOperand();
+		String varKey = null;
+		if(left instanceof QualifiedName) {
+			varKey = ((QualifiedName) left).getQualifier().resolveBinding().getKey();
+			if(paramterKey == varKey) {
+				return true;
+			}
+		} else if(left instanceof SimpleName){
+			varKey = ((SimpleName) left).resolveBinding().getKey();
+		}
+		
+		if(!varDeclaredInFor.contains(varKey)) {
+			isUpgradable = false;
+			return false;
+		}
+		return true;
+	}
+	
+	@Override
+	public boolean visit(PostfixExpression node) {
+		//no problems with the for parameter variables 
+		String paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+		Expression left = node.getOperand();
 		String varKey = null;
 		if(left instanceof QualifiedName) {
 			varKey = ((QualifiedName) left).getQualifier().resolveBinding().getKey();

@@ -196,6 +196,9 @@ public class Main {
 		for(Personne p : pers) {
 			somme++;
 		}
+		for(Personne p : pers) {
+			++somme;
+		}
 		//oui
 		somme = 1;
 		for(Personne p : pers) {
