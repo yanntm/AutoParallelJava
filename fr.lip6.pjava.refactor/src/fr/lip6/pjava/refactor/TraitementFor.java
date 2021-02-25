@@ -140,7 +140,7 @@ public class TraitementFor implements ICleanUpFix {
 			TextEdit textEdit = rewriter.rewriteAST(); //create a TextEdit, that contain the modifications inside the rewriter
 			compilationUnitChange.setEdit(textEdit);   //set the TextEdit as the things that contains our modification in the CompilationUnitChange
 		} catch (Throwable e) {
-			e.printStackTrace();
+			//Ne rien faire
 		}
 		
 	    return compilationUnitChange;	
