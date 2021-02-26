@@ -54,6 +54,26 @@ public class Main {
 			}
 		}
 		
+		for(Personne p:pers) {
+			if(p.age==0) {
+				if(p.sexe) {
+					p.anniversaire();
+					p.anniversaire();
+				}
+			}
+			System.out.println("Yo");
+		}
+		
+		for(Personne p:pers) {
+			if(p.age==0) {
+				if(p.sexe) {
+					p.anniversaire();
+					p.anniversaire();
+				}
+				System.out.println("ho");
+			}
+		}
+		
 		//TEST6
 		for(Personne p:pers) {
 			p.anniversaire();
