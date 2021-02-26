@@ -35,6 +35,8 @@ public class TraitementForBody extends ASTVisitor {
 	 * the body of the last if
 	 */
 	private ASTNode body = null;
+	
+	private boolean filterPossible = true;
 	/**
 	 * The constructor used to initialize all the attributes
 	 * @param parent the parent who call the operation
@@ -48,7 +50,7 @@ public class TraitementForBody extends ASTVisitor {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean visit(IfStatement node) {
-		if(node.getElseStatement()==null && ((Block)node.getParent()).statements().size()==1) {
+		if(filterPossible && node.getElseStatement()==null && ((Block)node.getParent()).statements().size()==1) {
 			if(first==null) {
 				first = ast.newMethodInvocation();
 				first.setName(ast.newSimpleName("filter"));
@@ -82,6 +84,8 @@ public class TraitementForBody extends ASTVisitor {
 
 			}
 			body = node.getThenStatement();
+		}else {
+			filterPossible=false;
 		}
 		return true;
 	}
