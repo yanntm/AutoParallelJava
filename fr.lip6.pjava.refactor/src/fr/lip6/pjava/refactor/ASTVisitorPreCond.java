@@ -155,8 +155,9 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		
 		if(parent.equals(caller)) {
 			isUpgradable = false;
+			return false;
 		}
-		return false;
+		return true;
 	}
 	
 	@Override
@@ -172,8 +173,9 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		
 		if(parent.equals(caller)) {
 			isUpgradable = false;
+			return false;
 		}
-		return false;
+		return true;
 	}
 
 	//Traitement des exceptions qui peuvent sortir de la boucle for
@@ -187,8 +189,9 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		exceptions.add(exceptionThrowed);
 		if(!checkExceptionCatch(exceptions, parent)) {
 			isUpgradable = false;
+			return false;
 		}
-		return false;
+		return true;
 	}
 	
 	@Override
