@@ -12,10 +12,12 @@ import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.text.edits.TextEdit;
@@ -55,7 +57,7 @@ public class TraitementFor implements ICleanUpFix {
 			ITypeBinding t = ((SimpleName)node.getExpression()).resolveTypeBinding();
 			
 			//Verification du type de tableau sur lequel on veut stream
-			MethodInvocation replaceMethod = detectCollectionType(ast, node, t);
+			MethodInvocation replaceMethod = detectCollectionType(ast, node, t, rewrite);
 			
 			if(replaceMethod == null) break;
 			//Creation of : <collection>.stream()
@@ -102,10 +104,11 @@ public class TraitementFor implements ICleanUpFix {
 	 * @param ast The ast that we are in
 	 * @param node The node we are looking at
 	 * @param t the type of the array
+	 * @param rewrite 
 	 * @return a new method Invocation fill with the good parameter or null if it is not an array
 	 */
 	@SuppressWarnings("unchecked")
-	private MethodInvocation detectCollectionType(AST ast, EnhancedForStatement node, ITypeBinding t) {
+	private MethodInvocation detectCollectionType(AST ast, EnhancedForStatement node, ITypeBinding t, ASTRewrite rewrite) {
 		if(!t.isArray() && !containsCollection(t)) {
 			return null;
 		}else {
@@ -116,18 +119,27 @@ public class TraitementFor implements ICleanUpFix {
 				return replaceMethod;
 			}
 			else {
-				if(t.isArray()) {
-					MethodInvocation replaceMethod = ast.newMethodInvocation();
-					replaceMethod.arguments().add( ASTNode.copySubtree(ast,node.getExpression()));
-					replaceMethod.setName(ast.newSimpleName("stream"));
-					replaceMethod.setExpression(ast.newSimpleName("Arrays"));
-					return replaceMethod;
-				}
+				
+				MethodInvocation replaceMethod = ast.newMethodInvocation();
+				replaceMethod.arguments().add( ASTNode.copySubtree(ast,node.getExpression()));
+				replaceMethod.setName(ast.newSimpleName("stream"));
+				replaceMethod.setExpression(ast.newSimpleName("Arrays"));
+				
+				
+				//Doit ajouter dans les import java.util.Arrays
+				ImportDeclaration im = ast.newImportDeclaration();
+				im.setName(ast.newName(new String[] {"java", "util", "Arrays"}));
+				
+				ListRewrite lrw = rewrite.getListRewrite(unit, CompilationUnit.IMPORTS_PROPERTY);
+				lrw.insertLast(im, null);
+				
+				return replaceMethod;
+				
 			}
 		}
-		return null;
 	}
-	
+
+
 	/**
 	 * Convert an ASTRewriter to a CompilationUnitChange
 	 * @param rewriter the rewriter with our modification

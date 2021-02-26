@@ -53,22 +53,6 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		fOptions= options;  
 	}
 	
-	/**
-	 * Parse a ICompilationUnit to a CompilationUnit, use to generate an AST 
-	 * @param lwUnit the source file we want to parse
-	 * @param monitor 
-	 * @return the AST generated
-	 */
-	protected CompilationUnit parse(ICompilationUnit lwUnit, IProgressMonitor monitor) {
-		ASTParser parser = ASTParser.newParser(AST.JLS15);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		parser.setSource(lwUnit);
-		parser.setBindingsRecovery(true);
-		parser.setResolveBindings(true);
-		parser.setStatementsRecovery(true);
-		return (CompilationUnit) parser.createAST(monitor);
-	}
-
 	@Override
 	public RefactoringStatus checkPreConditions(IJavaProject project, ICompilationUnit[] compilationUnits,
 			IProgressMonitor monitor) throws CoreException {
