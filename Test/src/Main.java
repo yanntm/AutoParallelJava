@@ -133,38 +133,6 @@ public class Main {
 			b+=p.age;
 		}
 		
-
-		//Voulue
-		//Pour le Test1, il ne doit proposer aucun changement doit 
-		
-		//Pour le TEST2 résultat voulue
-		pers.stream()
-		.forEach(p->p.anniversaire());
-		
-		//Pour le TEST3
-		pers.stream()
-		.filter(p->p.age==0)
-		.forEach(p->p.anniversaire());
-		
-		//Pour le TEST4 ne rien faire
-		
-		//Pour le TEST5 
-		pers.stream()
-		.filter(p->p.age==0)
-		.forEach(p->{
-			p.anniversaire();
-			p.anniversaire();
-		});
-		
-		//Pour le test 6
-		pers.stream()
-		.forEach(p->{
-			p.anniversaire();
-			p.anniversaire();
-		});
-			
-		
-		
 		// Break
 		
 		for(Personne p : pers) {
@@ -237,7 +205,7 @@ public class Main {
 	
 		
 		
-	
+	//Classe pour TEST
 	public static class Personne{
 		public int age=0;
 		public boolean sexe = true;
