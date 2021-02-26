@@ -17,6 +17,12 @@ public class Main {
 			pers.add(new Personne());
 		}
 		
+		Personne[] pers23 = new Personne[10];
+		
+		for(Personne p : pers23) {
+			System.out.println(p);
+		}
+		
 		
 		//Test 1
 		for(Integer i:l) {
