@@ -52,7 +52,6 @@ public class TraitementFor implements ICleanUpFix {
 		final ASTRewrite rewrite = ASTRewrite.create(ast);  //We create a new ASTRewrite, that will contain all our modification
 		
 		//We call the accept method on the AST, that will visit all the nodes, and use a personalized ASTVisitor to apply our changes
-		System.out.println(listFor.size() +" TAILLLLE");
 		for(EnhancedForStatement node : listFor) {
 			ITypeBinding t = ((SimpleName)node.getExpression()).resolveTypeBinding();
 			
