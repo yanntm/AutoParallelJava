@@ -160,6 +160,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		return true;
 	}
 	
+	//Identique à celui de Break sauf sans le SWITCH dans la condition
 	@Override
 	public boolean visit(ContinueStatement node) {
 		ASTNode parent = node.getParent();
