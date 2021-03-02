@@ -207,6 +207,14 @@ public class Main {
 			}
 		}
 		
+		final StringBuilder buf = new StringBuilder();
+		for(Personne p : pers) {
+			buf.append(p.age+"");
+		}
+		System.out.println(buf.toString());
+		
+		
+		
 	}
 	
 		

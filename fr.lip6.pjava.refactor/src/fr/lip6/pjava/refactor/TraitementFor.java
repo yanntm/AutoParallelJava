@@ -25,7 +25,7 @@ import org.eclipse.text.edits.TextEdit;
 /**
  * Class looking for Enhanced For, that we can transform to stream equivalent.
  * This class also propose the changes for the enhanced for.
- * @author teill
+ * @author Teillet & Capitanio
  *
  */
 public class TraitementFor implements ICleanUpFix {

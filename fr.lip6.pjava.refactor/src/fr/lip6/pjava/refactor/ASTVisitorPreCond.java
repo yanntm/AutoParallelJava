@@ -13,7 +13,9 @@ import org.eclipse.jdt.core.dom.ContinueStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
@@ -74,6 +76,18 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		String paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
 		Expression left = node.getLeftHandSide();
 		String varKey = null;
+		if(node.getRightHandSide().getNodeType()==ASTNode.QUALIFIED_NAME && ((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding().getKind()==ITypeBinding.VARIABLE 
+																		 && ( !( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).isEffectivelyFinal() &&
+																		 !Modifier.isFinal(( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).getModifiers()) ) 
+		 ||
+			 node.getRightHandSide().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName) node.getRightHandSide()).resolveBinding().getKind()==ITypeBinding.VARIABLE 
+			 && ( !( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).isEffectivelyFinal() &&
+			 !Modifier.isFinal(( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).getModifiers())
+		 ) ){
+			isUpgradable = false;
+			return false;
+		}
+		
 		if(left instanceof QualifiedName) {
 			varKey = ((QualifiedName) left).getQualifier().resolveBinding().getKey();
 			if(paramterKey == varKey) {
