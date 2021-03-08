@@ -38,6 +38,7 @@ public class TransformationMap extends ASTVisitor {
 		return true;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean visit(Assignment node) {
 		// TODO Auto-generated method stub
