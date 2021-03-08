@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
@@ -65,37 +66,63 @@ public class TraitementFor implements ICleanUpFix {
 			TraitementForBody tfb = new TraitementForBody(node, ast);
 			node.getBody().accept(tfb);
 			
-//			TransformationMap tMap = new TransformationMap(node);
-//			if(tfb.getBody()!=null)tfb.getBody().accept(tMap);
+			TransformationMap tMap = new TransformationMap(node);
+			if(tfb.getBody()!=null)tfb.getBody().accept(tMap);
+			else node.getBody().accept(tMap);
+			System.out.println(tMap.getTerminale());
 			
-			
-			//There is no If, so there isn't a filter. We create directly the forEach Method
-			MethodInvocation forEach = ast.newMethodInvocation();
-			
-			forEach.setName(ast.newSimpleName("forEach"));
-			
-			if(tfb.getFirst()!=null && tfb.getLast()!=null) {
-				tfb.getFirst().setExpression(replaceMethod);
-				forEach.setExpression(tfb.getLast());
-			}else {
-				if(tfb.getFirst()!=null) {
+			if(tMap.getMap()!=null && tMap.getTerminale()!=null) {
+				//There is no If, so there isn't a filter. We create directly the forEach Method
+
+				if(tfb.getFirst()!=null && tfb.getLast()!=null) {
 					tfb.getFirst().setExpression(replaceMethod);
-					forEach.setExpression(tfb.getFirst());
+					tMap.getMap().setExpression(tfb.getLast());
+				}else {
+					if(tfb.getFirst()!=null) {
+						tfb.getFirst().setExpression(replaceMethod);
+						tMap.getMap().setExpression(tfb.getFirst());
+					}
+					else {
+						tMap.getMap().setExpression(replaceMethod);
+					}
 				}
-				else {
-					forEach.setExpression(replaceMethod);
+				Assignment a = ast.newAssignment();
+				a.setOperator(Assignment.Operator.PLUS_ASSIGN);
+				a.setLeftHandSide((Expression) ASTNode.copySubtree(ast, tMap.getLeft()));
+				a.setRightHandSide(tMap.getTerminale());
+				ExpressionStatement st = ast.newExpressionStatement(a);
+				rewrite.replace(node, st, null); //We add our modification to the record
+			}else {
+					
+				
+				//There is no If, so there isn't a filter. We create directly the forEach Method
+				MethodInvocation forEach = ast.newMethodInvocation();
+				
+				forEach.setName(ast.newSimpleName("forEach"));
+				
+				if(tfb.getFirst()!=null && tfb.getLast()!=null) {
+					tfb.getFirst().setExpression(replaceMethod);
+					forEach.setExpression(tfb.getLast());
+				}else {
+					if(tfb.getFirst()!=null) {
+						tfb.getFirst().setExpression(replaceMethod);
+						forEach.setExpression(tfb.getFirst());
+					}
+					else {
+						forEach.setExpression(replaceMethod);
+					}
+					
 				}
 				
+				//We create the Lambda Expression for the ForEach
+				LambdaExpression forEachCorps = ast.newLambdaExpression();
+				if(tfb.getBody()!=null) forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody()));
+				else forEachCorps.setBody(ASTNode.copySubtree(ast, node.getBody()));
+				forEachCorps.parameters().add(ASTNode.copySubtree(ast,node.getParameter()));
+				forEach.arguments().add(forEachCorps);
+				ExpressionStatement st = ast.newExpressionStatement(forEach);
+				rewrite.replace(node, st, null); //We add our modification to the record
 			}
-				
-			//We create the Lambda Expression for the ForEach
-			LambdaExpression forEachCorps = ast.newLambdaExpression();
-			if(tfb.getBody()!=null) forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody()));
-			else forEachCorps.setBody(ASTNode.copySubtree(ast, node.getBody()));
-			forEachCorps.parameters().add(ASTNode.copySubtree(ast,node.getParameter()));
-			forEach.arguments().add(forEachCorps);
-			ExpressionStatement st = ast.newExpressionStatement(forEach);
-			rewrite.replace(node, st, null); //We add our modification to the record
 		}
 		
 		return applicationChangement(rewrite); //Return a CompilationUnitChange that all our modification

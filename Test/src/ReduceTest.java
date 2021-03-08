@@ -10,7 +10,14 @@ public class ReduceTest {
 		int test1 = 1;
 		for (Integer integer : temp) {
 			somme+=integer;
-			test1*=integer;
+		}
+
+		for (Integer integer : temp) {
+			somme+=Integer.parseInt("10");
+		}
+		
+		for (Integer integer : temp) {
+			somme+=Math.PI;
 			
 		}
 		
