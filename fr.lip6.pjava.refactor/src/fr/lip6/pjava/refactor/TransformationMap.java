@@ -42,7 +42,6 @@ public class TransformationMap extends ASTVisitor {
 	@Override
 	public boolean visit(Assignment node) {
 		// TODO Auto-generated method stub
-		System.out.println("ICI");
 		if(node.getLeftHandSide().getNodeType()==ASTNode.SIMPLE_NAME && !variableLocale.contains(((SimpleName)node.getLeftHandSide()).resolveBinding().getKey())) {
 			
 			RightSideTypeVisitor rSTV = new RightSideTypeVisitor();
