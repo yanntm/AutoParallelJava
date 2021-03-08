@@ -11,8 +11,13 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.QualifiedType;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.internal.ui.fix.AbstractMultiFix;
 import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
 import org.eclipse.jdt.ui.cleanup.CleanUpRequirements;
@@ -88,19 +93,19 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		if(cu == null || !fOptions.isEnabled("cleanup.transform_enhanced_for")) {return null;}
 		
 		cu.accept(new ASTVisitor() {
+			
 			@Override
 			public boolean visit(EnhancedForStatement node) {
 				
 				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
 				node.getBody().accept(visitorPreCond);
 				
-				if (visitorPreCond.isUpgradable())
+				if (visitorPreCond.isUpgradable() )
 				{
 					forATraiter.add(node);
 				}
 				return false;
 			}
-					
 		});
 		return Lambda2For.createCleanUp(cu, forATraiter);
 	}

@@ -45,6 +45,8 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	 */
 	private List<String> varDeclaredInFor;
 	
+	private List<String> varUsedInsideDeclaredOutside;
+	
 	/**
 	 * The constructor use to initiate the attributes
 	 * @param caller this the node calling this object
@@ -53,14 +55,15 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		isUpgradable = true;
 		this.caller = caller;
 		varDeclaredInFor = new ArrayList<String>();
+		varUsedInsideDeclaredOutside = new ArrayList<String>();
 	}
-
+	
 	/**
 	 * Return if the given EnhancedFor is Upgradable
 	 * @return if the given EnhancedFor is Upgradable
 	 */
 	public boolean isUpgradable() {
-		return isUpgradable;
+		return isUpgradable || varUsedInsideDeclaredOutside.size()==1;
 	}
 	
 
@@ -76,14 +79,16 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		String paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
 		Expression left = node.getLeftHandSide();
 		String varKey = null;
-		if(node.getRightHandSide().getNodeType()==ASTNode.QUALIFIED_NAME && ((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding().getKind()==ITypeBinding.VARIABLE 
-																		 && ( !( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).isEffectivelyFinal() &&
-																		 !Modifier.isFinal(( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).getModifiers()) ) 
-		 ||
-			 node.getRightHandSide().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName) node.getRightHandSide()).resolveBinding().getKind()==ITypeBinding.VARIABLE 
-			 && ( !( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).isEffectivelyFinal() &&
-			 !Modifier.isFinal(( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).getModifiers())
-		 ) ){
+		//verification du statut final
+		if(node.getRightHandSide().getNodeType()==ASTNode.QUALIFIED_NAME
+			&& ((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding().getKind()==ITypeBinding.VARIABLE 
+			&& ( !( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).isEffectivelyFinal() &&
+			!Modifier.isFinal(( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).getModifiers()) ) 
+			||
+			node.getRightHandSide().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName) node.getRightHandSide()).resolveBinding().getKind()==ITypeBinding.VARIABLE 
+			&& ( !( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).isEffectivelyFinal() &&
+			!Modifier.isFinal(( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).getModifiers())
+		) ){
 			isUpgradable = false;
 			return false;
 		}
@@ -99,6 +104,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		
 		if(!varDeclaredInFor.contains(varKey)) {
 			isUpgradable = false;
+			varUsedInsideDeclaredOutside.add(varKey);
 			return false;
 		}
 		return true;

@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -210,10 +211,36 @@ public class Main {
 		final StringBuilder buf = new StringBuilder();
 		for(Personne p : pers) {
 			buf.append(p.age+"");
+			System.out.println(buf);
 		}
 		System.out.println(buf.toString());
 		
 		
+		final int _somme = 1;
+		for(Personne p : pers) {
+			p.age = _somme;
+		}
+		
+		
+		//Pour les Map
+		
+		int testMap1=0;
+		testMap1++;
+		for (Personne personne : pers) {
+			testMap1+=personne.age;
+		}
+		
+		//Equivalent
+		int testMap2 = pers.stream().mapToInt(p-> p.age).sum();
+		
+		
+		int testMap3=0;
+		for (Personne personne : pers) {
+			if(personne.age>=18)
+			testMap1+=personne.age;
+		}
+		
+		int testMap4 = pers.stream().filter(p->p.age>=18).mapToInt(p-> p.age).sum();
 		
 	}
 	
