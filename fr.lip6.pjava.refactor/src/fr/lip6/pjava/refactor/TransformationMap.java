@@ -67,7 +67,6 @@ public class TransformationMap extends ASTVisitor {
 			default:
 				break;
 			}
-			System.out.println("ICIC " + rSTV.getType());
 			if(map==null)return false;
 			
 			if(node.getOperator().equals(Assignment.Operator.PLUS_ASSIGN)) {
