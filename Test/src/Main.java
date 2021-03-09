@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class Main {
@@ -235,12 +236,20 @@ public class Main {
 		
 		
 		int testMap3=0;
+		//Test
 		for (Personne personne : pers) {
 			if(personne.age>=18)
 			testMap1+=personne.age;
 		}
 		
 		int testMap4 = pers.stream().filter(p->p.age>=18).mapToInt(p-> p.age).sum();
+		
+		List<Integer> testlistInteger = new ArrayList<>();
+		for (Personne p : pers) {
+			testlistInteger.add(p.age);
+		}
+		
+		testlistInteger.addAll(pers.stream().map(p -> p.age).collect(Collectors.toList()));
 		
 	}
 	
@@ -250,6 +259,7 @@ public class Main {
 	public static class Personne{
 		public int age=0;
 		public boolean sexe = true;
+		private String nom ="Temp";
 		
 		Personne(int age) throws IllegalArgumentException {
 			if (age> 100) {
@@ -269,5 +279,15 @@ public class Main {
 		void anniversaire2() throws Exception{
 			throw new Exception();
 		}
+		
+		String getNom() {return nom;}
+		
+		void setNom(String s) {nom = s;}
 	}
+	
+	public static void mariage(Personne p, Personne a) {
+		a.setNom(p.getNom());
+	}
+	
+	
 }
