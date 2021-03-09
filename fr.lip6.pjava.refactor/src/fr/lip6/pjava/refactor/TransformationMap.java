@@ -43,24 +43,22 @@ public class TransformationMap extends ASTVisitor {
 	public boolean visit(Assignment node) {
 		// TODO Auto-generated method stub
 		if(node.getLeftHandSide().getNodeType()==ASTNode.SIMPLE_NAME && !variableLocale.contains(((SimpleName)node.getLeftHandSide()).resolveBinding().getKey())) {
+
+			String type = node.getRightHandSide().resolveTypeBinding().getQualifiedName();
 			
-			RightSideTypeVisitor rSTV = new RightSideTypeVisitor();
-			node.getRightHandSide().accept(rSTV);
-			
-			switch (rSTV.getType().toLowerCase()) {
+			switch (type) {
 			case "int":
-				map = ast.newMethodInvocation();
-				map.setName(ast.newSimpleName("mapToInt"));
-				break;
-			case "integer":
+			case "java.lang.Integer":
 				map = ast.newMethodInvocation();
 				map.setName(ast.newSimpleName("mapToInt"));
 				break;
 			case "double":
+			case "java.lang.Double":
 				map = ast.newMethodInvocation();
 				map.setName(ast.newSimpleName("mapToDouble"));
 				break;
 			case"long":
+			case "java.lang.Long":
 				map = ast.newMethodInvocation();
 				map.setName(ast.newSimpleName("mapToLong"));
 			default:
@@ -95,6 +93,12 @@ public class TransformationMap extends ASTVisitor {
 	
 	public SimpleName getLeft() {
 		return left;
+	}
+	
+	@Override
+	public boolean visit(MethodInvocation node) {
+		// TODO Auto-generated method stub
+		return super.visit(node);
 	}
 	
 }

@@ -69,7 +69,6 @@ public class TraitementFor implements ICleanUpFix {
 			TransformationMap tMap = new TransformationMap(node);
 			if(tfb.getBody()!=null)tfb.getBody().accept(tMap);
 			else node.getBody().accept(tMap);
-			System.out.println(tMap.getTerminale());
 			
 			if(tMap.getMap()!=null && tMap.getTerminale()!=null) {
 				//There is no If, so there isn't a filter. We create directly the forEach Method

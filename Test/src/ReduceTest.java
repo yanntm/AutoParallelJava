@@ -21,6 +21,13 @@ public class ReduceTest {
 			
 		}
 		
+		for (Integer integer : temp) {
+			if(integer>18) {
+				somme+=Math.PI;
+			}
+			
+		}
+		
 		System.out.println(somme+"");
 		
 		
