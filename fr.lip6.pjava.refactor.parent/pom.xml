@@ -14,8 +14,8 @@
 	<artifactId>fr.lip6.pjava.refactor.parent</artifactId>
 	<packaging>pom</packaging>
 	<version>1.0.0-SNAPSHOT</version>
-	<name>ITS-tools contribution</name>
-	<description>An example contribution of a plugin for ITS-Tools</description>
+	<name>AutoParallelJava</name>
+	<description>A tool to rewrite classical loops to lambda based iteration, and lambdas to parallel for.</description>
 
 	<modules>
 		<!-- Logic + functionality plugin -->
@@ -29,13 +29,13 @@
 	</modules>
 
 	<scm>
-		<connection>https://github.com/jeremysitbon5/ITS-contribution.git</connection>
-		<developerConnection>https://github.com/jeremysitbon5/ITS-contribution.git</developerConnection>
-		<url>https://github.com/jeremysitbon5/ITS-contribution</url>
+		<connection>https://github.com/yanntm/AutoParallelJava</connection>
+		<developerConnection>https://github.com/yanntm/AutoParallelJava</developerConnection>
+		<url>https://github.com/yanntm/AutoParallelJava</url>
 	</scm>
 
 	<organization>
-		<name>Sorbonne Université, UPMC and CNRS, LIP6</name>
+		<name>LIP6, Sorbonne Université, CNRS</name>
 		<url>http://www.lip6.fr</url>
 	</organization>
 

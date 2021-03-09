@@ -11,7 +11,7 @@
   
     <artifactId>fr.lip6.pjava.refactor.ui</artifactId>
     <packaging>eclipse-plugin</packaging>
-    <name>A default ui plugin contributing to ITS-tools.</name>
-    <description>Defines a button invoking a treatment over a GAL Specification.</description>
+    <name>Integration into "Cleanup" preferences.</name>
+    <description>Defines UI controls to invoke core functionality.</description>
 
 </project>
