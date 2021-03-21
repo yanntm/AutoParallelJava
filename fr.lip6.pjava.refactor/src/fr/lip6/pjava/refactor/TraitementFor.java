@@ -97,7 +97,22 @@ public class TraitementFor implements ICleanUpFix {
 					rewrite.replace(node, st, null); //We add our modification to the record
 					break;
 				case 2:
+					ImportDeclaration im = ast.newImportDeclaration();
+					im.setName(ast.newName(new String[] {"java", "util", "stream", "Collectors"}));
 					
+					ListRewrite lrw = rewrite.getListRewrite(unit, CompilationUnit.IMPORTS_PROPERTY);
+					lrw.insertLast(im, null);
+					
+					MethodInvocation res = ast.newMethodInvocation();
+					res.setExpression((Expression) ASTNode.copySubtree(ast, tMap.getLeft()));
+					res.arguments().add(tMap.getTerminale());
+					res.setName(ast.newSimpleName("addAll"));
+					
+					st = ast.newExpressionStatement(res);
+					rewrite.replace(node, st, null); //We add our modification to the record
+					
+					
+					break;
 				default:
 					break;
 				}

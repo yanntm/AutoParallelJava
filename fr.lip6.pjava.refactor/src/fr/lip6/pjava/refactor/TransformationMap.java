@@ -8,12 +8,16 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 public class TransformationMap extends ASTVisitor {
 	
@@ -31,11 +35,13 @@ public class TransformationMap extends ASTVisitor {
 	
 	private int cas = -1;
 	
+	
 	public TransformationMap(EnhancedForStatement parent) {
 		this.parent = parent;
 		ast = parent.getAST();
 	}
 	
+
 	@Override
 	public boolean visit(VariableDeclarationFragment node) {
 		variableLocale.add(node.resolveBinding().getKey());
@@ -107,6 +113,8 @@ public class TransformationMap extends ASTVisitor {
 		if(node.getName().getIdentifier().equals("add") && node.getExpression()!=null && node.arguments().size()==1){
 			ITypeBinding[] t = node.getExpression().resolveTypeBinding().getInterfaces();
 			if(contains(t, "java.util.Collection")) {
+				left = (SimpleName) node.getExpression();
+				
 				LambdaExpression lb = ast.newLambdaExpression();
 				lb.setBody(ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0)));
 				lb.parameters().add(ASTNode.copySubtree(ast, parent.getParameter()));
@@ -125,7 +133,6 @@ public class TransformationMap extends ASTVisitor {
 				terminale.setExpression(map);
 				
 				cas=2;
-				System.out.println("ici");
 			}
 		}
 		
@@ -135,7 +142,6 @@ public class TransformationMap extends ASTVisitor {
 
 	private boolean contains(ITypeBinding[] t, String string) {
 		for(ITypeBinding type:t) {
-			System.out.println(type.getQualifiedName());
 			if(type.getQualifiedName().contains(string)) {
 				return true;
 			}
