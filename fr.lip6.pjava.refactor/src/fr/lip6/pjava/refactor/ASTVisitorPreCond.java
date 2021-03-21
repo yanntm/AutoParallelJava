@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
@@ -88,19 +89,18 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			node.getRightHandSide().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName) node.getRightHandSide()).resolveBinding().getKind()==ITypeBinding.VARIABLE 
 			&& ( !( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).isEffectivelyFinal() &&
 			!Modifier.isFinal(( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).getModifiers())
+			
+			
 		) ){
 			isUpgradable = false;
 			return false;
 		}
 		
-		if(left instanceof QualifiedName) {
-			varKey = ((QualifiedName) left).getQualifier().resolveBinding().getKey();
-			if(paramterKey == varKey) {
-				return true;
-			}
-		} else if(left instanceof SimpleName){
-			varKey = ((SimpleName) left).resolveBinding().getKey();
+		varKey = ((Name)left).resolveBinding().getKey();
+		if(paramterKey == varKey) {
+			return true;
 		}
+	
 		
 		if(!varDeclaredInFor.contains(varKey)) {
 			isUpgradable = false;
@@ -224,10 +224,14 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		}
 		if(!checkExceptionCatch(exceptions, parent)) {
 			isUpgradable = false;
+			return false;
 		}
+		return true;
+		//if(node.getName().)
 		
-		// TODO verif pas de modif de var
-		return false;
+		
+		
+		
 	}
 	
 	@Override

@@ -3,11 +3,13 @@ package fr.lip6.pjava.refactor;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -26,6 +28,8 @@ public class TransformationMap extends ASTVisitor {
 	private SimpleName left = null;
 	
 	private List<String> variableLocale = new ArrayList<>();
+	
+	private int cas = -1;
 	
 	public TransformationMap(EnhancedForStatement parent) {
 		this.parent = parent;
@@ -77,6 +81,8 @@ public class TransformationMap extends ASTVisitor {
 				terminale = ast.newMethodInvocation();
 				terminale.setName(ast.newSimpleName("sum"));
 				terminale.setExpression(map);
+				
+				cas=1;
 			}
 			
 		}
@@ -95,10 +101,53 @@ public class TransformationMap extends ASTVisitor {
 		return left;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean visit(MethodInvocation node) {
-		// TODO Auto-generated method stub
-		return super.visit(node);
+		if(node.getName().getIdentifier().equals("add") && node.getExpression()!=null && node.arguments().size()==1){
+			ITypeBinding[] t = node.getExpression().resolveTypeBinding().getInterfaces();
+			if(contains(t, "java.util.Collection")) {
+				LambdaExpression lb = ast.newLambdaExpression();
+				lb.setBody(ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0)));
+				lb.parameters().add(ASTNode.copySubtree(ast, parent.getParameter()));
+				
+				map = ast.newMethodInvocation();
+				map.setName(ast.newSimpleName("map"));
+				map.arguments().add(lb);
+				
+				MethodInvocation toList = ast.newMethodInvocation();
+				toList.setName(ast.newSimpleName("toList"));
+				toList.setExpression(ast.newSimpleName("Collectors"));
+				
+				terminale = ast.newMethodInvocation();
+				terminale.setName(ast.newSimpleName("collect"));
+				terminale.arguments().add(toList);
+				terminale.setExpression(map);
+				
+				cas=2;
+				System.out.println("ici");
+			}
+		}
+		
+		
+		return false;
 	}
+
+	private boolean contains(ITypeBinding[] t, String string) {
+		for(ITypeBinding type:t) {
+			System.out.println(type.getQualifiedName());
+			if(type.getQualifiedName().contains(string)) {
+				return true;
+			}
+		}
+		return false;
+		
+	}
+
+	public int getCas() {
+		return cas;
+	}
+	
+	
 	
 }

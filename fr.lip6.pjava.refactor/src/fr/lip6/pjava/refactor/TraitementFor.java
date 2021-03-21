@@ -85,12 +85,24 @@ public class TraitementFor implements ICleanUpFix {
 						tMap.getMap().setExpression(replaceMethod);
 					}
 				}
-				Assignment a = ast.newAssignment();
-				a.setOperator(Assignment.Operator.PLUS_ASSIGN);
-				a.setLeftHandSide((Expression) ASTNode.copySubtree(ast, tMap.getLeft()));
-				a.setRightHandSide(tMap.getTerminale());
-				ExpressionStatement st = ast.newExpressionStatement(a);
-				rewrite.replace(node, st, null); //We add our modification to the record
+				
+				switch (tMap.getCas()) {
+				case 1:
+					Assignment a = ast.newAssignment();
+					a.setOperator(Assignment.Operator.PLUS_ASSIGN);
+					a.setLeftHandSide((Expression) ASTNode.copySubtree(ast, tMap.getLeft()));
+					a.setRightHandSide(tMap.getTerminale());
+					
+					ExpressionStatement st = ast.newExpressionStatement(a);
+					rewrite.replace(node, st, null); //We add our modification to the record
+					break;
+				case 2:
+					
+				default:
+					break;
+				}
+				
+
 			}else {
 					
 				
