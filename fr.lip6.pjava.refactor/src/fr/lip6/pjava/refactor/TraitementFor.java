@@ -54,7 +54,7 @@ public class TraitementFor implements ICleanUpFix {
 		
 		//We call the accept method on the AST, that will visit all the nodes, and use a personalized ASTVisitor to apply our changes
 		for(EnhancedForStatement node : listFor) {
-			ITypeBinding t = ((SimpleName)node.getExpression()).resolveTypeBinding();
+			ITypeBinding t = node.getExpression().resolveTypeBinding();
 			
 			//Verification du type de tableau sur lequel on veut stream
 			MethodInvocation replaceMethod = detectCollectionType(ast, node, t, rewrite);
@@ -82,7 +82,7 @@ public class TraitementFor implements ICleanUpFix {
 						tMap.getMap().setExpression(tfb.getFirst());
 					}
 					else {
-						tMap.getMap().setExpression(replaceMethod);
+						tMap.getMap().setExpression(replaceMethod); //TODO Probleme
 					}
 				}
 				
@@ -201,7 +201,7 @@ public class TraitementFor implements ICleanUpFix {
 	 * @return compilationUnitChange ready to apply all the changes
 	 */
 	private CompilationUnitChange applicationChangement(ASTRewrite rewriter) {
-		CompilationUnitChange compilationUnitChange = new CompilationUnitChange("Refactor of EnhancedFor", (ICompilationUnit)unit.getJavaElement());
+		CompilationUnitChange compilationUnitChange = new CompilationUnitChange("Refactor of EnhancedFor", (ICompilationUnit) unit.getJavaElement().getJavaProject());
 		
 		try {
 			TextEdit textEdit = rewriter.rewriteAST(); //create a TextEdit, that contain the modifications inside the rewriter

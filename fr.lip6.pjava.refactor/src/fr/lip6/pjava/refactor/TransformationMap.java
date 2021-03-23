@@ -10,14 +10,13 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
-import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 public class TransformationMap extends ASTVisitor {
 	
@@ -29,7 +28,7 @@ public class TransformationMap extends ASTVisitor {
 	
 	private AST ast = null;
 	
-	private SimpleName left = null;
+	private Expression left = null;
 	
 	private List<String> variableLocale = new ArrayList<>();
 	
@@ -103,7 +102,7 @@ public class TransformationMap extends ASTVisitor {
 		return terminale;
 	}
 	
-	public SimpleName getLeft() {
+	public Expression getLeft() {
 		return left;
 	}
 	
@@ -113,7 +112,7 @@ public class TransformationMap extends ASTVisitor {
 		if(node.getName().getIdentifier().equals("add") && node.getExpression()!=null && node.arguments().size()==1){
 			ITypeBinding[] t = node.getExpression().resolveTypeBinding().getInterfaces();
 			if(contains(t, "java.util.Collection")) {
-				left = (SimpleName) node.getExpression();
+				left = node.getExpression(); 
 				
 				LambdaExpression lb = ast.newLambdaExpression();
 				lb.setBody(ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0)));

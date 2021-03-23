@@ -96,10 +96,15 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			return false;
 		}
 		
-		varKey = ((Name)left).resolveBinding().getKey();
-		if(paramterKey == varKey) {
-			return true;
+		if(left instanceof QualifiedName) {
+			varKey = ((QualifiedName) left).getQualifier().resolveBinding().getKey();
+			if(paramterKey == varKey) {
+				return true;
+			}
+		} else if(left instanceof SimpleName){
+			varKey = ((SimpleName) left).resolveBinding().getKey();
 		}
+		
 	
 		
 		if(!varDeclaredInFor.contains(varKey)) {
