@@ -82,7 +82,7 @@ public class TraitementFor implements ICleanUpFix {
 						tMap.getMap().setExpression(tfb.getFirst());
 					}
 					else {
-						tMap.getMap().setExpression(replaceMethod); //TODO Probleme
+						tMap.getMap().setExpression(replaceMethod);
 					}
 				}
 				
@@ -201,7 +201,7 @@ public class TraitementFor implements ICleanUpFix {
 	 * @return compilationUnitChange ready to apply all the changes
 	 */
 	private CompilationUnitChange applicationChangement(ASTRewrite rewriter) {
-		CompilationUnitChange compilationUnitChange = new CompilationUnitChange("Refactor of EnhancedFor", (ICompilationUnit) unit.getJavaElement().getJavaProject());
+		CompilationUnitChange compilationUnitChange = new CompilationUnitChange("Refactor of EnhancedFor", (ICompilationUnit)unit.getJavaElement());
 		
 		try {
 			TextEdit textEdit = rewriter.rewriteAST(); //create a TextEdit, that contain the modifications inside the rewriter
