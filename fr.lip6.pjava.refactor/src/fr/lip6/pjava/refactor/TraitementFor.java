@@ -20,6 +20,9 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
+import org.eclipse.jdt.internal.corext.fix.LinkedProposalModel;
+import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix.CompilationUnitRewriteOperation;
+import org.eclipse.jdt.internal.corext.refactoring.structure.CompilationUnitRewrite;
 import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.text.edits.TextEdit;
 
@@ -29,37 +32,36 @@ import org.eclipse.text.edits.TextEdit;
  * @author Teillet & Capitanio
  *
  */
-public class TraitementFor implements ICleanUpFix {
+public class TraitementFor extends CompilationUnitRewriteOperation {
 	/**
 	 * CompilationUnit represents the AST, and to call a visitor on the tree
 	 */
 	private CompilationUnit unit;
-	private List<EnhancedForStatement> listFor;
+	private EnhancedForStatement node;
 
 	/**
 	 * The constructor used to initiate the attribute
 	 * @param unit The CompilationUnit of the document
 	 * @param forATraiter 
 	 */
-	public TraitementFor(CompilationUnit unit, List<EnhancedForStatement> forATraiter) {
+	public TraitementFor(CompilationUnit unit, EnhancedForStatement node) {
 		this.unit=unit;
-		listFor = forATraiter;
+		this.node = node;
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public CompilationUnitChange createChange(IProgressMonitor progressMonitor) throws CoreException {
-		AST ast = unit.getAST();   //We obtain the AST from the CompilationUnit. The will be use as a factory
-		final ASTRewrite rewrite = ASTRewrite.create(ast);  //We create a new ASTRewrite, that will contain all our modification
+	public void rewriteAST(CompilationUnitRewrite cuRewrite, LinkedProposalModel linkedModel) throws CoreException{
+		AST ast = cuRewrite.getRoot().getAST();   //We obtain the AST from the CompilationUnit. The will be use as a factory
+		final ASTRewrite rewrite = cuRewrite.getASTRewrite();  //We create a new ASTRewrite, that will contain all our modification
 		
 		//We call the accept method on the AST, that will visit all the nodes, and use a personalized ASTVisitor to apply our changes
-		for(EnhancedForStatement node : listFor) {
 			ITypeBinding t = node.getExpression().resolveTypeBinding();
 			
 			//Verification du type de tableau sur lequel on veut stream
 			MethodInvocation replaceMethod = detectCollectionType(ast, node, t, rewrite);
 			
-			if(replaceMethod == null) break;
+			if(replaceMethod == null) return;
 			//Creation of : <collection>.stream()
 			
 			// Method to copy an ASTNode and use it elsewhere : ASTNode.copySubtree(AST, nodeToCopy))
@@ -149,9 +151,7 @@ public class TraitementFor implements ICleanUpFix {
 				ExpressionStatement st = ast.newExpressionStatement(forEach);
 				rewrite.replace(node, st, null); //We add our modification to the record
 			}
-		}
-		
-		return applicationChangement(rewrite); //Return a CompilationUnitChange that all our modification
+		 //Return a CompilationUnitChange that all our modification
 	}
 
 	/**

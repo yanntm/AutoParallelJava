@@ -11,7 +11,10 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix;
+import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix.CompilationUnitRewriteOperation;
 import org.eclipse.jdt.internal.ui.fix.AbstractMultiFix;
+import org.eclipse.jdt.internal.ui.fix.MultiFixMessages;
 import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
 import org.eclipse.jdt.ui.cleanup.CleanUpRequirements;
 import org.eclipse.jdt.ui.cleanup.ICleanUp;
@@ -28,7 +31,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 public class Lambda2For extends AbstractMultiFix implements ICleanUp {	 
 	private CleanUpOptions fOptions;
 	private RefactoringStatus fStatus;
-	List<EnhancedForStatement> forATraiter = new ArrayList<EnhancedForStatement>();
+	
 	
 	
 	@Override
@@ -84,7 +87,7 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	@Override
 	protected ICleanUpFix createFix(CompilationUnit cu) throws CoreException {
 		if(cu == null || !fOptions.isEnabled("cleanup.transform_enhanced_for")) {return null;}
-		
+		List<CompilationUnitRewriteOperation> rewriteOperations = new ArrayList<>();
 		cu.accept(new ASTVisitor() {
 			
 			@Override
@@ -95,25 +98,19 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 				
 				if (visitorPreCond.isUpgradable() )
 				{
-					forATraiter.add(node);
+					rewriteOperations.add(new TraitementFor(cu, node));
 				}
 				return false;
 			}
 		});
-		return Lambda2For.createCleanUp(cu, forATraiter);
+		
+		//return Lambda2For.createCleanUp(cu, forATraiter);
+		
+		 if(rewriteOperations.isEmpty())return null;
+		 else return new CompilationUnitRewriteOperationsFix("Transformation of EnhancedFor to Stream", cu,
+				 rewriteOperations.toArray(new CompilationUnitRewriteOperation[rewriteOperations.size()]));
 	}
 	
-
-	/**
-	 * Method use to call our operation on the unit
-	 * @param unit the CompilationUnit on the one we our doing transformation
-	 * @param forATraiter the list of enhancedFor that we will transform
-	 * @return the changement made on the AST
-	 */
-	private static ICleanUpFix createCleanUp(CompilationUnit unit, List<EnhancedForStatement> forATraiter) {
-		return new TraitementFor(unit, forATraiter);
-	}
-
 	@Override
 	protected ICleanUpFix createFix(CompilationUnit unit, IProblemLocation[] problems) throws CoreException {
 		return null;
