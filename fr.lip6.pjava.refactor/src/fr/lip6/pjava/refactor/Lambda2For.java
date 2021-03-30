@@ -11,6 +11,8 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix.CompilationUnitRewriteOperation;
 import org.eclipse.jdt.internal.ui.fix.AbstractMultiFix;
@@ -93,6 +95,31 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			@Override
 			public boolean visit(EnhancedForStatement node) {
 				
+				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
+				node.getBody().accept(visitorPreCond);
+				
+				if (visitorPreCond.isUpgradable() )
+				{
+					rewriteOperations.add(new TraitementFor(cu, node));
+				}
+				return false;
+			}
+			
+			@Override
+			public boolean visit(WhileStatement node) {				
+				
+				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
+				node.getBody().accept(visitorPreCond);
+				
+				if (visitorPreCond.isUpgradable() )
+				{
+					rewriteOperations.add(new TraitementFor(cu, node));
+				}
+				return false;
+			}
+			
+			@Override
+			public boolean visit(ForStatement node) {
 				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
 				node.getBody().accept(visitorPreCond);
 				

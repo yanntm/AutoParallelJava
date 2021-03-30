@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class TransformationMap extends ASTVisitor {
@@ -24,7 +25,7 @@ public class TransformationMap extends ASTVisitor {
 	
 	private MethodInvocation terminale = null;
 	
-	private EnhancedForStatement parent = null;
+	private SingleVariableDeclaration parameter = null;
 	
 	private AST ast = null;
 	
@@ -35,9 +36,9 @@ public class TransformationMap extends ASTVisitor {
 	private int cas = -1;
 	
 	
-	public TransformationMap(EnhancedForStatement parent) {
-		this.parent = parent;
-		ast = parent.getAST();
+	public TransformationMap(SingleVariableDeclaration parameter) {
+		this.parameter = parameter;
+		ast = parameter.getAST();
 	}
 	
 
@@ -79,7 +80,7 @@ public class TransformationMap extends ASTVisitor {
 				left = (SimpleName) node.getLeftHandSide();
 				LambdaExpression lb = ast.newLambdaExpression();
 				lb.setBody(ASTNode.copySubtree(ast, node.getRightHandSide()));
-				lb.parameters().add(ASTNode.copySubtree(ast, parent.getParameter()));
+				lb.parameters().add(ASTNode.copySubtree(ast, parameter));
 				
 				map.arguments().add(lb);
 				
@@ -116,7 +117,7 @@ public class TransformationMap extends ASTVisitor {
 				
 				LambdaExpression lb = ast.newLambdaExpression();
 				lb.setBody(ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0)));
-				lb.parameters().add(ASTNode.copySubtree(ast, parent.getParameter()));
+				lb.parameters().add(ASTNode.copySubtree(ast,parameter));
 				
 				map = ast.newMethodInvocation();
 				map.setName(ast.newSimpleName("map"));
