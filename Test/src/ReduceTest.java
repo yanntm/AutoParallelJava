@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ReduceTest {
 
@@ -8,32 +9,17 @@ public class ReduceTest {
 		
 		int somme = 0;
 		int test1 = 1;
-		for (Integer integer : temp) {
-			somme+=integer;
-		}
+		somme += temp.stream().mapToInt((Integer integer) -> integer).sum();
 
-		for (Integer integer : temp) {
-			somme+=Integer.parseInt("10");
-		}
+		somme += temp.stream().mapToInt((Integer integer) -> Integer.parseInt("10")).sum();
 		
-		for (Integer integer : temp) {
-			somme+=Math.PI;
-			
-		}
+		somme += temp.stream().mapToDouble((Integer integer) -> Math.PI).sum();
 		
-		for (Integer integer : temp) {
-			if(integer>18) {
-				somme+=Math.PI;
-			}
-			
-		}
+		somme += temp.stream().filter((Integer integer) -> integer > 18).mapToDouble((Integer integer) -> Math.PI)
+				.sum();
 		
 		List<Integer> res = new ArrayList<>();
-		for(Integer i : temp) {
-			if(i>18) {
-				res.add(i);
-			}
-		}
+		res.addAll(temp.stream().filter((Integer i) -> i > 18).map((Integer i) -> i).collect(Collectors.toList()));
 		
 		int test = temp.stream().mapToInt(i->i).sum();
 	}

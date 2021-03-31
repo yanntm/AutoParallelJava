@@ -77,7 +77,12 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	@Override
 	public boolean visit(Assignment node) {
 		//no problems with the for parameter variables 
-		String paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+		String paramterKey;
+		if(caller instanceof EnhancedForStatement) {
+			paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+		}else {
+			return false;
+		}
 		Expression left = node.getLeftHandSide();
 		String varKey = null;
 		//verification du statut final
@@ -118,7 +123,12 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	@Override
 	public boolean visit(PrefixExpression node) {
 		//no problems with the for parameter variables 
-		String paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+		String paramterKey;
+		if(caller instanceof EnhancedForStatement) {
+			paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+		}else {
+			return false;
+		}
 		Expression left = node.getOperand();
 		String varKey = null;
 		if(left instanceof QualifiedName) {
@@ -140,7 +150,12 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	@Override
 	public boolean visit(PostfixExpression node) {
 		//no problems with the for parameter variables 
-		String paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+		String paramterKey;
+		if(caller instanceof EnhancedForStatement) {
+			paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+		}else {
+			return false;
+		}
 		Expression left = node.getOperand();
 		String varKey = null;
 		if(left instanceof QualifiedName) {
@@ -232,11 +247,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			return false;
 		}
 		return true;
-		//if(node.getName().)
-		
-		
-		
-		
+
 	}
 	
 	@Override

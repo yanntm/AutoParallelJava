@@ -100,35 +100,36 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 				
 				if (visitorPreCond.isUpgradable() )
 				{
+					//Ne pas ajouter d'élément qui ne fait rien
 					rewriteOperations.add(new TraitementFor(cu, node));
 				}
 				return false;
 			}
 			
-			@Override
-			public boolean visit(WhileStatement node) {				
-				
-				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
-				node.getBody().accept(visitorPreCond);
-				
-				if (visitorPreCond.isUpgradable() )
-				{
-					rewriteOperations.add(new TraitementFor(cu, node));
-				}
-				return false;
-			}
-			
-			@Override
-			public boolean visit(ForStatement node) {
-				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
-				node.getBody().accept(visitorPreCond);
-				
-				if (visitorPreCond.isUpgradable() )
-				{
-					rewriteOperations.add(new TraitementFor(cu, node));
-				}
-				return false;
-			}
+//			@Override
+//			public boolean visit(WhileStatement node) {				
+//				
+//				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
+//				node.getBody().accept(visitorPreCond);
+//				
+//				if (visitorPreCond.isUpgradable() )
+//				{
+//					rewriteOperations.add(new TraitementFor(cu, node));
+//				}
+//				return false;
+//			}
+//			
+//			@Override
+//			public boolean visit(ForStatement node) {
+//				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
+//				node.getBody().accept(visitorPreCond);
+//				
+//				if (visitorPreCond.isUpgradable() )
+//				{
+//					rewriteOperations.add(new TraitementFor(cu, node));
+//				}
+//				return false;
+//			}
 		});
 		
 		//return Lambda2For.createCleanUp(cu, forATraiter);
