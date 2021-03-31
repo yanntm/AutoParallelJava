@@ -159,23 +159,6 @@ public class Main {
 			}
 		}
 		
-		// Continue
-		
-		for(Personne p : pers) {
-			if(p.age < 2 ) {
-				continue;
-			}
-			p.anniversaire();
-		}
-		
-		for(Personne p1 :pers) {
-			for(Personne p : pers) {
-				if(p.age < 2 ) {
-					continue;
-				}
-				p.anniversaire();
-			}
-		}
 		
 		// Test Affectation 
 		
