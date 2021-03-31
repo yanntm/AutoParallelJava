@@ -96,12 +96,14 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			public boolean visit(EnhancedForStatement node) {
 				
 				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
-				node.getBody().accept(visitorPreCond);
-				
-				if (visitorPreCond.isUpgradable() )
-				{
-					//Ne pas ajouter d'élément qui ne fait rien
-					rewriteOperations.add(new TraitementFor(cu, node));
+				if (visitorPreCond.isUpgradable()) {
+					node.getBody().accept(visitorPreCond);
+					
+					if (visitorPreCond.isUpgradable() )
+					{
+						//Ne pas ajouter d'élément qui ne fait rien
+						rewriteOperations.add(new TraitementFor(cu, node));
+					}
 				}
 				return false;
 			}

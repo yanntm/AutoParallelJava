@@ -3,17 +3,20 @@ package fr.lip6.pjava.refactor;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.BreakStatement;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ContinueStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
@@ -26,6 +29,8 @@ import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.ThrowStatement;
 import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 /**
  * Class use to check the enhancedFor if this is possible to transform them
@@ -40,7 +45,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	/**
 	 * We keep the caller to be sure to not verify things outside of the EnhancedFor
 	 */
-	private final ASTNode caller;
+	private final EnhancedForStatement caller;
 	/**
 	 * List of variables keys encountered in the EnhancedFor
 	 */
@@ -52,11 +57,12 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	 * The constructor use to initiate the attributes
 	 * @param caller this the node calling this object
 	 */
-	public ASTVisitorPreCond(ASTNode caller) {
-		isUpgradable = true;
+	public ASTVisitorPreCond(EnhancedForStatement caller) {
+		
 		this.caller = caller;
 		varDeclaredInFor = new ArrayList<String>();
 		varUsedInsideDeclaredOutside = new ArrayList<String>();
+		isUpgradable = isCollection(caller.getExpression());
 	}
 	
 	/**
@@ -295,5 +301,25 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		return false;
 	}
 	
+	private boolean isCollection(Expression expression) {
+		ITypeBinding t = expression.resolveTypeBinding();
+		if (t == null) {
+			return false;
+		}
+		if(!t.isArray() && !containsCollection(t)) {
+			return false;
+		}else {
+			return true;
+		}
+	}
+	
+	private boolean containsCollection(ITypeBinding t) {
+		for (ITypeBinding i :t.getInterfaces()){
+			if(i.getBinaryName().contains("java.util.Collection")) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 }
