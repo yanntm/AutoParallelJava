@@ -15,6 +15,8 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -51,30 +53,13 @@ public class TransformationMap extends ASTVisitor {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean visit(Assignment node) {
-		// TODO Auto-generated method stub
+		// TODO verifier qu'il n'y est qu'une seul operation dans le block et seul block
+
 		if(node.getLeftHandSide().getNodeType()==ASTNode.SIMPLE_NAME && !variableLocale.contains(((SimpleName)node.getLeftHandSide()).resolveBinding().getKey())) {
 
 			String type = node.getRightHandSide().resolveTypeBinding().getQualifiedName();
-			
-			switch (type) {
-			case "int":
-			case "java.lang.Integer":
-				map = ast.newMethodInvocation();
-				map.setName(ast.newSimpleName("mapToInt"));
-				break;
-			case "double":
-			case "java.lang.Double":
-				map = ast.newMethodInvocation();
-				map.setName(ast.newSimpleName("mapToDouble"));
-				break;
-			case"long":
-			case "java.lang.Long":
-				map = ast.newMethodInvocation();
-				map.setName(ast.newSimpleName("mapToLong"));
-			default:
-				break;
-			}
-			if(map==null)return false;
+			initMap(type);
+			if(map==null) return false;
 			
 			if(node.getOperator().equals(Assignment.Operator.PLUS_ASSIGN)) {
 				left = (SimpleName) node.getLeftHandSide();
@@ -89,12 +74,48 @@ public class TransformationMap extends ASTVisitor {
 				terminale.setExpression(map);
 				
 				cas=1;
-			}
-			
+			}	
 		}
 		return false; 
 	}
+
 	
+	@Override
+	public boolean visit(PostfixExpression node) {
+		// TODO verifier si seul operation ne marche pas a refaire
+		
+		if (node.getNodeType() == ASTNode.SIMPLE_NAME && !variableLocale.contains(((SimpleName)node.getOperand()).resolveBinding().getKey()))  {
+			
+			String type = node.resolveTypeBinding().getQualifiedName();
+			initMap(type);
+			if(map==null) return false;
+			
+			if(node.getOperator().equals(PostfixExpression.Operator.INCREMENT)) {
+				left = (SimpleName) node.getOperand();
+				LambdaExpression lb = ast.newLambdaExpression();
+				lb.setBody(ASTNode.copySubtree(ast, node.getRightHandSide()));
+				lb.parameters().add(ASTNode.copySubtree(ast, parameter));
+				
+				map.arguments().add(lb);
+				
+				terminale = ast.newMethodInvocation();
+				terminale.setName(ast.newSimpleName("sum"));
+				terminale.setExpression(map);
+				
+				cas=1;
+			}
+		}
+		return false;
+	}
+
+
+	@Override
+	public boolean visit(PrefixExpression node) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
 	public MethodInvocation getMap() {
 		return map;
 	}
@@ -139,6 +160,28 @@ public class TransformationMap extends ASTVisitor {
 		
 		return false;
 	}
+	
+	
+	private void initMap(String type) {
+		switch (type) {
+		case "int":
+		case "java.lang.Integer":
+			map = ast.newMethodInvocation();
+			map.setName(ast.newSimpleName("mapToInt"));
+			break;
+		case "double":
+		case "java.lang.Double":
+			map = ast.newMethodInvocation();
+			map.setName(ast.newSimpleName("mapToDouble"));
+			break;
+		case"long":
+		case "java.lang.Long":
+			map = ast.newMethodInvocation();
+			map.setName(ast.newSimpleName("mapToLong"));
+		default:
+			break;
+		}
+	}
 
 	private boolean contains(ITypeBinding[] t, String string) {
 		for(ITypeBinding type:t) {
@@ -153,7 +196,4 @@ public class TransformationMap extends ASTVisitor {
 	public int getCas() {
 		return cas;
 	}
-	
-	
-	
 }

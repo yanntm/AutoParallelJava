@@ -10,6 +10,8 @@ public class ReduceTest {
 		int somme = 0;
 		int test1 = 1;
 		somme += temp.stream().mapToInt((Integer integer) -> integer).sum();
+		
+		somme += temp.stream().count();
 
 		somme += temp.stream().mapToInt((Integer integer) -> Integer.parseInt("10")).sum();
 		
@@ -22,6 +24,10 @@ public class ReduceTest {
 		res.addAll(temp.stream().filter((Integer i) -> i > 18).map((Integer i) -> i).collect(Collectors.toList()));
 		
 		int test = temp.stream().mapToInt(i->i).sum();
+		
+		for(Integer i : temp) {
+			somme += i ;
+		}
 	}
 
 }

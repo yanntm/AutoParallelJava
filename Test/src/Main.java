@@ -162,15 +162,35 @@ public class Main {
 		
 		// Test Affectation 
 		
+		
+		
 		//non
 		int somme = 0;
 		for(Personne p : pers) {
 			somme = p.age;
 		}
+		
+		// cas compliqué
+		
+		for(Personne p : pers) {
+			if(p.age == 10) {
+				somme++;
+			}
+		}
+		
+		// TODO pb map ecrase le reste
+		
 		somme = 0;
 		for(Personne p : pers) {
-			somme += p.age;
+			if(p.age <2) {
+				somme += p.age;
+			}
+			p.anniversaire();;
 		}
+		
+		
+		
+		
 		somme = 0;
 		for(Personne p : pers) {
 			somme++;
@@ -179,9 +199,9 @@ public class Main {
 			++somme;
 		}
 		//oui
-		somme = 1;
+		final int var1 = 1;
 		for(Personne p : pers) {
-			p.age = somme;
+			p.age = var1;
 		}
 		
 		for(Personne p : pers) {

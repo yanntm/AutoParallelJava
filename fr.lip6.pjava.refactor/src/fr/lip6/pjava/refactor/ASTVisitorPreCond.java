@@ -41,7 +41,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	/**
 	 * Use to verify if the enhancedFor can be upgradable
 	 */
-	private boolean isUpgradable;
+	private boolean isUpgradable, notInterrupted;
 	/**
 	 * We keep the caller to be sure to not verify things outside of the EnhancedFor
 	 */
@@ -63,6 +63,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		varDeclaredInFor = new ArrayList<String>();
 		varUsedInsideDeclaredOutside = new ArrayList<String>();
 		isUpgradable = isCollection(caller.getExpression());
+		notInterrupted = true;
 	}
 	
 	/**
@@ -71,7 +72,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	 */
 	public boolean isUpgradable() {
 		// TODO ajouter cond 
-		return isUpgradable; //|| varUsedInsideDeclaredOutside.size()==1
+		return notInterrupted && (isUpgradable || varUsedInsideDeclaredOutside.size()==1);
 	}
 	
 
@@ -175,7 +176,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		}
 		
 		if(!varDeclaredInFor.contains(varKey)) {
-			isUpgradable = false;
+			varUsedInsideDeclaredOutside.add(varKey);
 			return false;
 		}
 		return true;
@@ -201,7 +202,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		}
 		
 		if(parent.equals(caller)) {
-			isUpgradable = false;
+			notInterrupted = false;
 			return false;
 		}
 		return true;
@@ -225,7 +226,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		
 		if(parent.equals(caller)) {
 			System.out.println("upgradble is false");
-			isUpgradable = false;
+			notInterrupted = false;
 			return false;
 		}
 		return true;
@@ -241,7 +242,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		ArrayList<String> exceptions = new ArrayList<String>();
 		exceptions.add(exceptionThrowed);
 		if(!checkExceptionCatch(exceptions, parent)) {
-			isUpgradable = false;
+			notInterrupted = false;
 			return false;
 		}
 		return true;

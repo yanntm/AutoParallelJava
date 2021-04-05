@@ -162,8 +162,8 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		if(tfb.getBody()!=null)tfb.getBody().accept(tMap);
 		else body.accept(tMap);
 		
+		// We apply Map transformation
 		if(tMap.getMap()!=null && tMap.getTerminale()!=null) {
-			//There is no If, so there isn't a filter. We create directly the forEach Method
 
 			if(tfb.getFirst()!=null && tfb.getLast()!=null) {
 				tfb.getFirst().setExpression(replaceMethod);
@@ -177,7 +177,8 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 					tMap.getMap().setExpression(replaceMethod);
 				}
 			}
-			
+			// replace stream by parallelStream
+			replaceMethod.setName(ast.newSimpleName("parallelStream"));
 			switch (tMap.getCas()) {
 			case 1:
 				Assignment a = ast.newAssignment();
@@ -234,6 +235,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			
 			//We create the Lambda Expression for the ForEach
 			LambdaExpression forEachCorps = ast.newLambdaExpression();
+			// TODO verifier si body parralelisable
 			if(tfb.getBody()!=null) forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody()));
 			else forEachCorps.setBody(ASTNode.copySubtree(ast, body));
 			forEachCorps.parameters().add(ASTNode.copySubtree(ast,parameter));

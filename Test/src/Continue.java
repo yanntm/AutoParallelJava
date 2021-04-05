@@ -8,6 +8,16 @@ public class Continue {
 		
 		List<Integer> l =new ArrayList<>();
 		List<Personne> pers = new ArrayList<Personne>();
+		
+		
+		int ext = 0;
+		for(Personne p : pers) {
+			if(p.age < 5) {
+				ext++ ;
+			} else {
+				continue;
+			}
+		}
 
 		for(Personne p : pers) {
 			if(p.age < 2 ) {
