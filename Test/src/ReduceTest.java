@@ -26,8 +26,10 @@ public class ReduceTest {
 		int test = temp.stream().mapToInt(i->i).sum();
 		
 		for(Integer i : temp) {
-			somme += i ;
+			somme++ ;
 		}
+		
+		System.out.println("test="+test+" somme="+somme);
 	}
 
 }

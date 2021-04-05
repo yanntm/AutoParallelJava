@@ -84,26 +84,18 @@ public class TransformationMap extends ASTVisitor {
 	public boolean visit(PostfixExpression node) {
 		// TODO verifier si seul operation ne marche pas a refaire
 		
-		if (node.getNodeType() == ASTNode.SIMPLE_NAME && !variableLocale.contains(((SimpleName)node.getOperand()).resolveBinding().getKey()))  {
+		if (node.getNodeType() == ASTNode.SIMPLE_NAME 
+				&& !variableLocale.contains(((SimpleName)node.getOperand()).resolveBinding().getKey())
+				&& node.getOperator().equals(PostfixExpression.Operator.INCREMENT)) {
+			//init map 
+			map = ast.newMethodInvocation();
+			map.setName(ast.newSimpleName("map"));
 			
-			String type = node.resolveTypeBinding().getQualifiedName();
-			initMap(type);
-			if(map==null) return false;
+			left = node.getOperand();
 			
-			if(node.getOperator().equals(PostfixExpression.Operator.INCREMENT)) {
-				left = (SimpleName) node.getOperand();
-				LambdaExpression lb = ast.newLambdaExpression();
-				lb.setBody(ASTNode.copySubtree(ast, node.getRightHandSide()));
-				lb.parameters().add(ASTNode.copySubtree(ast, parameter));
-				
-				map.arguments().add(lb);
-				
-				terminale = ast.newMethodInvocation();
-				terminale.setName(ast.newSimpleName("sum"));
-				terminale.setExpression(map);
-				
-				cas=1;
-			}
+			terminale = ast.newMethodInvocation();
+			terminale.setName(ast.newSimpleName("count"));
+			terminale.setExpression(map);
 		}
 		return false;
 	}
