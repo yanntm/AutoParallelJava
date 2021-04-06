@@ -283,6 +283,10 @@ public class Main {
 			throw new Exception();
 		}
 		
+		synchronized void anniversaire3() throws Exception{
+			throw new Exception();
+		}
+		
 		String getNom() {return nom;}
 		
 		void setNom(String s) {nom = s;}
