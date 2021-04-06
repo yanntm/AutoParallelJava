@@ -1,17 +1,27 @@
 package fr.lip6.pjava.refactor;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix.CompilationUnitRewriteOperation;
@@ -61,11 +71,65 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			IProgressMonitor monitor) throws CoreException {
 		if (fOptions.isEnabled("cleanup.transform_enhanced_for")) { //$NON-NLS-1$
 			fStatus= new RefactoringStatus();
+			Map<String, List<String>> method = new HashMap<>();
+			method.put("ReadOnly", new ArrayList<>());
+			method.put("ThreadSafe", new ArrayList<>());
+			method.put("Modification Object Courant", new ArrayList<>());
+			//Creation AST de tout le projet
+			getASTFromIJavaProjectAndVisitMethod(project, method);
+
+//				visit(MethodInvocation node) {
+//					node.visit(new ASTConditionPara())
+//			switch astCon.type(){
+//			case "READ-ONly":
+//				method.get("Read-Only").add(node.getBinaryName())
+//				break;
+//			case "Thread-Safe":
+//				method.get("Thread-Safe").add(node.getBinaryName())
+//				break;
+//			case "Modification Object Courant":
+//				method.get("Modification Object Courant").add(node.getBinaryName())
+//				break;			
+//			
+//			});
 			
 		}
 		
 		return new RefactoringStatus();
 		
+	}
+
+	private void getASTFromIJavaProjectAndVisitMethod(IJavaProject project, Map<String, List<String>> map) {
+		try {
+			IPackageFragment[] packages = project.getPackageFragments();
+			for (IPackageFragment mypackage : packages) {
+                if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
+                        for (ICompilationUnit unit : mypackage.getCompilationUnits()) {
+                                // Now create the AST for the ICompilationUnits
+                                CompilationUnit parse = parse(unit);
+                                parse.accept(new ASTVisitor() {
+                                	@Override
+                                	public boolean visit(MethodDeclaration node) {
+                                		MethodVisitor visitor = new MethodVisitor();
+                                		node.getBody().accept(visitor);
+                                		if (visitor.isReadOnly()) {
+                                			map.get("ReadOnly").add(node.resolveBinding().getKey());
+                                		}
+                                		if (Modifier.isSynchronized(node.resolveBinding().getModifiers())) {
+                                			map.get("ThreadSafe").add(node.resolveBinding().getKey());
+                                		}
+                                		return false;
+                                	}
+                                });
+
+                        }
+                }
+
+        }
+		} catch (JavaModelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -107,34 +171,9 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 				}
 				return false;
 			}
-			
-//			@Override
-//			public boolean visit(WhileStatement node) {				
-//				
-//				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
-//				node.getBody().accept(visitorPreCond);
-//				
-//				if (visitorPreCond.isUpgradable() )
-//				{
-//					rewriteOperations.add(new TraitementFor(cu, node));
-//				}
-//				return false;
-//			}
-//			
-//			@Override
-//			public boolean visit(ForStatement node) {
-//				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
-//				node.getBody().accept(visitorPreCond);
-//				
-//				if (visitorPreCond.isUpgradable() )
-//				{
-//					rewriteOperations.add(new TraitementFor(cu, node));
-//				}
-//				return false;
-//			}
+
 		});
-		
-		//return Lambda2For.createCleanUp(cu, forATraiter);
+	
 		
 		 if(rewriteOperations.isEmpty())return null;
 		 else return new CompilationUnitRewriteOperationsFix("Transformation of EnhancedFor to Stream", cu,
@@ -146,4 +185,12 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		return null;
 	}
 
+	
+    private static CompilationUnit parse(ICompilationUnit unit) {
+        ASTParser parser = ASTParser.newParser(AST.JLS15);
+        parser.setKind(ASTParser.K_COMPILATION_UNIT);
+        parser.setSource(unit);
+        parser.setResolveBindings(true);
+        return (CompilationUnit) parser.createAST(null); // parse
+}
 }

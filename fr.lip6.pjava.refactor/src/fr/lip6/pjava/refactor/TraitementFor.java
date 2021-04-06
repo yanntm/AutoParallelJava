@@ -74,74 +74,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			body = ((EnhancedForStatement) node).getBody();
 			parameter = ((EnhancedForStatement) node).getParameter();
 		}else {
-			if (node instanceof WhileStatement) {
-				
-				if (((WhileStatement) node).getExpression().getNodeType()==ASTNode.METHOD_INVOCATION) {
-					MethodInvocation meth = (MethodInvocation) ((WhileStatement) node).getExpression();
-					IMethodBinding methBind = meth.resolveMethodBinding();
-					if(methBind.getName().equals("hasNext") && methBind.getDeclaringClass().getBinaryName().equals("java.util.Iterator")) {
-						if( ((WhileStatement) node).getBody().getNodeType()==ASTNode.BLOCK && ((Block)((WhileStatement) node).getBody()).statements().size()>0 ) {
-							ASTNode a = (ASTNode) ((Block)((WhileStatement) node).getBody()).statements().get(0); //Probleme de cast.
-							if( a.getNodeType()==ASTNode.VARIABLE_DECLARATION_STATEMENT) {
-								VariableDeclarationStatement v = (VariableDeclarationStatement) a;
-								if( contains(methBind.getDeclaringClass().getTypeArguments(), v.getType().resolveBinding().getBinaryName()) ) {
-									VariableDeclarationFragment vdf = (VariableDeclarationFragment) v.fragments().get(0);
-									if(vdf.getInitializer().getNodeType()==ASTNode.METHOD_INVOCATION && ((MethodInvocation) vdf.getInitializer()).resolveMethodBinding().getName().equals("next")) {
-										expression = ((MethodInvocation) ((MethodInvocation) ((WhileStatement) node).getExpression()).getExpression()).getExpression();
-										parameter = ast.newSingleVariableDeclaration();
-										parameter.setName(ast.newSimpleName(vdf.getName().getIdentifier()));
-										parameter.setType((Type) ASTNode.copySubtree(ast, v.getType()));
-										body = ast.newBlock();
-										int i =0;
-										for(Object o : ((Block)((WhileStatement) node).getBody()).statements()) {
-											if (i!=0)((Block) body).statements().add(ASTNode.copySubtree(ast, (ASTNode) o));
-											i++;
-										}
-										
-									}else return;
-								}else return;
-							}else return;
-						}else return;
-					}else return;
-				}else return;
-			}else { 	
-				
-				if( node instanceof ForStatement) {
-					ForStatement f = (ForStatement) node;
-					if(f.getExpression().getNodeType()==ASTNode.INFIX_EXPRESSION && ((InfixExpression) f.getExpression()).getRightOperand().getNodeType()==ASTNode.METHOD_INVOCATION) {
-						MethodInvocation m = (MethodInvocation) ((InfixExpression) f.getExpression()).getRightOperand(); //l.size()
-						IMethodBinding methBind = m.resolveMethodBinding();
-						
-						if( methBind.getName().equals("size") && containsCollection(methBind.getDeclaringClass()) ) {
-							ASTNode a = (ASTNode) ((Block)((ForStatement) node).getBody()).statements().get(0); 
-							
-							if( a.getNodeType()==ASTNode.VARIABLE_DECLARATION_STATEMENT) {
-								VariableDeclarationStatement v = (VariableDeclarationStatement) a;
-								
-								if( contains(methBind.getDeclaringClass().getTypeArguments(), v.getType().resolveBinding().getBinaryName()) ) {
-									VariableDeclarationFragment vdf = (VariableDeclarationFragment) v.fragments().get(0);
-									
-									
-									if(vdf.getInitializer().getNodeType()==ASTNode.METHOD_INVOCATION && ((MethodInvocation) vdf.getInitializer()).resolveMethodBinding().getName().equals("get")) {
-										expression = m.getExpression();
-										parameter = ast.newSingleVariableDeclaration();
-										parameter.setName(ast.newSimpleName(vdf.getName().getIdentifier()));
-										parameter.setType((Type) ASTNode.copySubtree(ast, v.getType()));
-										body = ast.newBlock();
-										int i =0;
-										for(Object o : ((Block)((ForStatement) node).getBody()).statements()) {
-											if (i!=0)((Block) body).statements().add(ASTNode.copySubtree(ast, (ASTNode) o));
-											i++;
-										}
-										System.out.println("ICICILALALALA");
-									}else return;
-								}else return;
-							}else return;
-						}else return;
-					}else return;
-				}else return;
-			}return;
-			
+			return;
 		}
 		
 		
@@ -177,7 +110,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 					tMap.getMap().setExpression(replaceMethod);
 				}
 			}
-			// replace stream by parallelStream
+			// replace stream by parallelStream because it is a map wiith sum or addAll
 			replaceMethod.setName(ast.newSimpleName("parallelStream"));
 			switch (tMap.getCas()) {
 			case 1:
