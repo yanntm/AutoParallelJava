@@ -1,9 +1,11 @@
 package fr.lip6.pjava.refactor;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -13,27 +15,19 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
-import org.eclipse.jdt.core.dom.ForStatement;
-import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.Type;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
-import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
-import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.internal.corext.fix.LinkedProposalModel;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix.CompilationUnitRewriteOperation;
 import org.eclipse.jdt.internal.corext.refactoring.structure.CompilationUnitRewrite;
-import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.text.edits.TextEdit;
 
 /**
@@ -48,6 +42,8 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 	 */
 	private CompilationUnit unit;
 	private Statement node;
+	private static Map<String, List<Name>> importAdded = new HashMap<>();
+	private String name;
 
 	/**
 	 * The constructor used to initiate the attribute
@@ -55,6 +51,9 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 	 * @param forATraiter 
 	 */
 	public TraitementFor(CompilationUnit unit, Statement node) {
+		name = unit.getJavaElement().getElementName();
+		List<Name> l = importAdded.get(name);
+		if (l == null) importAdded.put(name, new ArrayList<>());
 		this.unit=unit;
 		this.node = node;
 	}
@@ -124,10 +123,16 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 				break;
 			case 2:
 				ImportDeclaration im = ast.newImportDeclaration();
-				im.setName(ast.newName(new String[] {"java", "util", "stream", "Collectors"}));
+				Name name = ast.newName(new String[] {"java", "util", "stream", "Collectors"});
+				im.setName(name);
 				
-				ListRewrite lrw = rewrite.getListRewrite(unit, CompilationUnit.IMPORTS_PROPERTY);
-				lrw.insertLast(im, null);
+				
+				if (!containsImport(name) ) {
+					importAdded.get(this.name).add(name);
+					ListRewrite lrw = rewrite.getListRewrite(unit, CompilationUnit.IMPORTS_PROPERTY);
+					lrw.insertLast(im, null);
+					
+				}
 				
 				MethodInvocation res = ast.newMethodInvocation();
 				res.setExpression((Expression) ASTNode.copySubtree(ast, tMap.getLeft()));
@@ -170,13 +175,27 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			LambdaExpression forEachCorps = ast.newLambdaExpression();
 			// TODO verifier si body parralelisable
 			if(tfb.getBody()!=null) forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody()));
-			else forEachCorps.setBody(ASTNode.copySubtree(ast, body));
+			else {
+				if ( !(body instanceof Block) ){
+					Block b = ast.newBlock();
+					b.statements().add(ASTNode.copySubtree(ast, body));
+					body = b;
+				}
+				forEachCorps.setBody(ASTNode.copySubtree(ast, body));
+			}
 			forEachCorps.parameters().add(ASTNode.copySubtree(ast,parameter));
 			forEach.arguments().add(forEachCorps);
 			ExpressionStatement st = ast.newExpressionStatement(forEach);
 			rewrite.replace(node, st, null); //We add our modification to the record
 		}
 		 //Return a CompilationUnitChange that all our modification
+	}
+
+	private boolean containsImport(Name name) {
+		for(Name n :  importAdded.get(this.name)) {
+			if (n.getFullyQualifiedName().equals(name.getFullyQualifiedName())) return true;
+		}
+		return false;
 	}
 
 	/**
@@ -208,10 +227,16 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 				
 				//Doit ajouter dans les import java.util.Arrays
 				ImportDeclaration im = ast.newImportDeclaration();
-				im.setName(ast.newName(new String[] {"java", "util", "Arrays"}));
+				Name name = ast.newName(new String[] {"java", "util", "Arrays"});
+				im.setName(name);
 				
-				ListRewrite lrw = rewrite.getListRewrite(unit, CompilationUnit.IMPORTS_PROPERTY);
-				lrw.insertLast(im, null);
+				if (!containsImport(name)) {
+					importAdded.get(this.name).add(name);
+					ListRewrite lrw = rewrite.getListRewrite(unit, CompilationUnit.IMPORTS_PROPERTY);
+					lrw.insertLast(im, null);
+				}
+				
+				
 				
 				return replaceMethod;
 				
@@ -219,25 +244,6 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		}
 	}
 
-
-	/**
-	 * Convert an ASTRewriter to a CompilationUnitChange
-	 * @param rewriter the rewriter with our modification
-	 * @return compilationUnitChange ready to apply all the changes
-	 */
-	private CompilationUnitChange applicationChangement(ASTRewrite rewriter) {
-		CompilationUnitChange compilationUnitChange = new CompilationUnitChange("Refactor of EnhancedFor", (ICompilationUnit)unit.getJavaElement());
-		
-		try {
-			TextEdit textEdit = rewriter.rewriteAST(); //create a TextEdit, that contain the modifications inside the rewriter
-			compilationUnitChange.setEdit(textEdit);   //set the TextEdit as the things that contains our modification in the CompilationUnitChange
-		} catch (Throwable e) {
-			//Ne rien faire
-		}
-		
-	    return compilationUnitChange;	
-	}
-	
 	/**
 	 * Method uses to verify if the type t is a Collection
 	 * @param t the type we want to check
@@ -251,12 +257,4 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		}
 		return false;
 	}
-	
-	private boolean contains(ITypeBinding[] typeArguments, String binaryName) {
-		for (ITypeBinding iTypeBinding : typeArguments) {
-			if (iTypeBinding.getBinaryName().equals(binaryName)) return true;
-		}
-		return false;
-	}
-
 }

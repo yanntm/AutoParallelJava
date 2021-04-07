@@ -25,9 +25,10 @@ public class MethodVisitor extends ASTVisitor {
 	
 	@Override
 	public boolean visit(PrefixExpression node) {
-		// TODO Auto-generated method stub
+		readOnly=false;
 		return false;
 	}
+	
 	public boolean isReadOnly() {
 		return readOnly;
 	}

@@ -71,12 +71,14 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			IProgressMonitor monitor) throws CoreException {
 		if (fOptions.isEnabled("cleanup.transform_enhanced_for")) { //$NON-NLS-1$
 			fStatus= new RefactoringStatus();
+			
 			Map<String, List<String>> method = new HashMap<>();
 			method.put("ReadOnly", new ArrayList<>());
 			method.put("ThreadSafe", new ArrayList<>());
 			method.put("Modification Object Courant", new ArrayList<>());
+			
 			//Creation AST de tout le projet
-			getASTFromIJavaProjectAndVisitMethod(project, method);
+			//getASTFromIJavaProjectAndVisitMethod(project, method);
 
 //				visit(MethodInvocation node) {
 //					node.visit(new ASTConditionPara())
@@ -118,6 +120,9 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
                                 		if (Modifier.isSynchronized(node.resolveBinding().getModifiers())) {
                                 			map.get("ThreadSafe").add(node.resolveBinding().getKey());
                                 		}
+//                                		if (visitor.isThreadSafe()) {
+//                                			map.get("ThreadSafe").add(node.resolveBinding().getKey());
+//                                		}
                                 		return false;
                                 	}
                                 });
