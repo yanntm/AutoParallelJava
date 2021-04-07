@@ -15,7 +15,6 @@ public class While {
 //			System.out.println(i);
 //		}
 //		size = l.size();
-		for(int j=0, je=size; j<je; j++)
 		for(int j=0; j<l.size();j++) {
 			Integer integer = l.get(j);
 			Integer i = integer;
