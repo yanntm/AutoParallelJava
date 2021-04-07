@@ -261,6 +261,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	public boolean visit(ClassInstanceCreation node) {
 		ASTNode parent = node.getParent();
 		ArrayList<String> exceptions = new ArrayList<String>();
+		if (node.resolveConstructorBinding() == null ) return false;
 		for(ITypeBinding b : node.resolveConstructorBinding().getExceptionTypes()) {
 			exceptions.add(b.getQualifiedName());
 		}

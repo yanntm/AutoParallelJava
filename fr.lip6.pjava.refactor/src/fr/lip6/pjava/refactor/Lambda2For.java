@@ -159,6 +159,7 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	protected ICleanUpFix createFix(CompilationUnit cu) throws CoreException {
 		if(cu == null || !fOptions.isEnabled("cleanup.transform_enhanced_for")) {return null;}
 		List<CompilationUnitRewriteOperation> rewriteOperations = new ArrayList<>();
+		TraitementFor.clear();
 		cu.accept(new ASTVisitor() {
 			
 			@Override

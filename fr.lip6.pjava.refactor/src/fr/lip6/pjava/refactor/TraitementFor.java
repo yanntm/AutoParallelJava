@@ -257,4 +257,8 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		}
 		return false;
 	}
+	
+	static void clear () {
+		importAdded.clear();
+	}
 }
