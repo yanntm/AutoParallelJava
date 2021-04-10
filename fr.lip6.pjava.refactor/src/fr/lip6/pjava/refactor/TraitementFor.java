@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
@@ -20,15 +19,15 @@ import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
-import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.internal.corext.fix.LinkedProposalModel;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix.CompilationUnitRewriteOperation;
 import org.eclipse.jdt.internal.corext.refactoring.structure.CompilationUnitRewrite;
-import org.eclipse.text.edits.TextEdit;
 
 /**
  * Class looking for Enhanced For, that we can transform to stream equivalent.
@@ -36,6 +35,7 @@ import org.eclipse.text.edits.TextEdit;
  * @author Teillet & Capitanio
  *
  */
+@SuppressWarnings("restriction")
 public class TraitementFor extends CompilationUnitRewriteOperation {
 	/**
 	 * CompilationUnit represents the AST, and to call a visitor on the tree
@@ -50,7 +50,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 	 * @param unit The CompilationUnit of the document
 	 * @param forATraiter 
 	 */
-	public TraitementFor(CompilationUnit unit, Statement node) {
+	public TraitementFor(CompilationUnit unit, EnhancedForStatement node) {
 		name = unit.getJavaElement().getElementName();
 		List<Name> l = importAdded.get(name);
 		if (l == null) importAdded.put(name, new ArrayList<>());
@@ -58,23 +58,17 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		this.node = node;
 	}
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked" })
 	@Override
 	public void rewriteAST(CompilationUnitRewrite cuRewrite, LinkedProposalModel linkedModel) throws CoreException{
 		AST ast = cuRewrite.getRoot().getAST();   //We obtain the AST from the CompilationUnit. The will be use as a factory
 		final ASTRewrite rewrite = cuRewrite.getASTRewrite();  //We create a new ASTRewrite, that will contain all our modification
 		
-		Expression expression = null;
-		Statement body = null;
-		SingleVariableDeclaration parameter = null;
+		Expression expression = ((EnhancedForStatement) node).getExpression();
+		Statement body = ((EnhancedForStatement) node).getBody();
+		SingleVariableDeclaration parameter = ((EnhancedForStatement) node).getParameter();
 		
-		if(node instanceof EnhancedForStatement) {
-			expression = ((EnhancedForStatement) node).getExpression();
-			body = ((EnhancedForStatement) node).getBody();
-			parameter = ((EnhancedForStatement) node).getParameter();
-		}else {
-			return;
-		}
+		verifParameter(parameter, ast);
 		
 		
 		//We call the accept method on the AST, that will visit all the nodes, and use a personalized ASTVisitor to apply our changes
@@ -82,8 +76,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		
 		//Verification du type de tableau sur lequel on veut stream
 		MethodInvocation replaceMethod = detectCollectionType(ast, expression, t, rewrite);
-		
-		if(replaceMethod == null) return;
+
 		//Creation of : <collection>.stream()
 		
 		// Method to copy an ASTNode and use it elsewhere : ASTNode.copySubtree(AST, nodeToCopy))
@@ -95,7 +88,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		else body.accept(tMap);
 		
 		// We apply Map transformation
-		if(tMap.getMap()!=null && tMap.getTerminale()!=null) {
+		if(tMap.getNbInstruction()==1 && tMap.getMap()!=null && tMap.getTerminale()!=null) {
 
 			if(tfb.getFirst()!=null && tfb.getLast()!=null) {
 				tfb.getFirst().setExpression(replaceMethod);
@@ -191,6 +184,43 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		 //Return a CompilationUnitChange that all our modification
 	}
 
+	private void verifParameter(SingleVariableDeclaration parameter, AST ast) {
+		Type t = parameter.getType();
+		if (t.isPrimitiveType()) {
+			PrimitiveType pT = (PrimitiveType) t;
+			Name finalType;
+			switch (pT.toString()) {
+			case "int":
+				finalType = ast.newName("Integer");
+				break;
+			case "char":
+				finalType = ast.newName("Character");
+				break;
+			case "boolean":
+				finalType = ast.newName("Boolean");
+				break;
+			case "short":
+				finalType = ast.newName("Short");
+				break;
+			case "long":
+				finalType = ast.newName("Long");
+				break;
+			case "float":
+				finalType = ast.newName("Float");
+				break;
+			case "double":
+				finalType = ast.newName("Double");
+				break;
+			case "byte":
+				finalType = ast.newName("Byte");
+				break;
+			default:
+				return;
+			}
+			parameter.setType(ast.newSimpleType(finalType));
+		}
+	}
+
 	private boolean containsImport(Name name) {
 		for(Name n :  importAdded.get(this.name)) {
 			if (n.getFullyQualifiedName().equals(name.getFullyQualifiedName())) return true;
@@ -261,4 +291,11 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 	static void clear () {
 		importAdded.clear();
 	}
+
+	@Override
+	public String toString() {
+		return "TraitementFor [unit=" + unit + ", node=" + node + ", name=" + name + "]";
+	}
+	
+	
 }

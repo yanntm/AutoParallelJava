@@ -113,6 +113,12 @@ public class TraitementForBody extends ASTVisitor {
 	public ASTNode getBody() {
 		return body;
 	}
+
+	@Override
+	public String toString() {
+		return "TraitementForBody [parent=" + parent + ", ast=" + ast + ", last=" + last + ", first=" + first
+				+ ", body=" + body + ", filterPossible=" + filterPossible + "]";
+	}
 	
 	
 

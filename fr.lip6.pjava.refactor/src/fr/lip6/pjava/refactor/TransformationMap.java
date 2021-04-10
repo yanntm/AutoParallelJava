@@ -7,7 +7,9 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.LambdaExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -33,6 +35,8 @@ public class TransformationMap extends ASTVisitor {
 	
 	private int cas = -1;
 	
+	private int nbInstruction = 0;
+	
 	
 	public TransformationMap(SingleVariableDeclaration parameter) {
 		this.parameter = parameter;
@@ -50,7 +54,7 @@ public class TransformationMap extends ASTVisitor {
 	@Override
 	public boolean visit(Assignment node) {
 		// TODO verifier qu'il n'y est qu'une seul operation dans le block et seul block
-
+		nbInstruction++;
 		if(node.getLeftHandSide().getNodeType()==ASTNode.SIMPLE_NAME && !variableLocale.contains(((SimpleName)node.getLeftHandSide()).resolveBinding().getKey())) {
 
 			String type = node.getRightHandSide().resolveTypeBinding().getQualifiedName();
@@ -75,6 +79,17 @@ public class TransformationMap extends ASTVisitor {
 		return false; 
 	}
 
+	@Override
+	public boolean visit(EnhancedForStatement node) {
+		nbInstruction++;
+		return super.visit(node);
+	}
+	
+	@Override
+	public boolean visit(ForStatement node) {
+		nbInstruction++;
+		return super.visit(node);
+	}
 	
 	@Override
 	public boolean visit(PostfixExpression node) {
@@ -119,6 +134,7 @@ public class TransformationMap extends ASTVisitor {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean visit(MethodInvocation node) {
+		nbInstruction++;
 		if(node.getName().getIdentifier().equals("add") && node.getExpression()!=null && node.arguments().size()==1){
 			ITypeBinding[] t = node.getExpression().resolveTypeBinding().getInterfaces();
 			if(contains(t, "java.util.Collection")) {
@@ -184,4 +200,16 @@ public class TransformationMap extends ASTVisitor {
 	public int getCas() {
 		return cas;
 	}
+
+
+	@Override
+	public String toString() {
+		return "TransformationMap [map=" + map + ", terminale=" + terminale + ", parameter=" + parameter + ", ast="
+				+ ast + ", left=" + left + ", variableLocale=" + variableLocale + ", cas=" + cas + "]";
+	}
+	
+	public int getNbInstruction() {
+		return nbInstruction;
+	}
+	
 }

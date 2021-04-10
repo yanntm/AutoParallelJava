@@ -3,8 +3,10 @@ package fr.lip6.pjava.refactor;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
@@ -13,20 +15,16 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
-import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix.CompilationUnitRewriteOperation;
 import org.eclipse.jdt.internal.ui.fix.AbstractMultiFix;
-import org.eclipse.jdt.internal.ui.fix.MultiFixMessages;
 import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
 import org.eclipse.jdt.ui.cleanup.CleanUpRequirements;
 import org.eclipse.jdt.ui.cleanup.ICleanUp;
@@ -72,13 +70,13 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		if (fOptions.isEnabled("cleanup.transform_enhanced_for")) { //$NON-NLS-1$
 			fStatus= new RefactoringStatus();
 			
-			Map<String, List<String>> method = new HashMap<>();
-			method.put("ReadOnly", new ArrayList<>());
-			method.put("ThreadSafe", new ArrayList<>());
-			method.put("Modification Object Courant", new ArrayList<>());
+			Map<String, Set<String>> method = new HashMap<>();
+			method.put("ReadOnly", new HashSet<>());
+			method.put("ThreadSafe", new HashSet<>());
+			method.put("Modification Object Courant", new HashSet<>());
 			
 			//Creation AST de tout le projet
-			//getASTFromIJavaProjectAndVisitMethod(project, method);
+			getASTFromIJavaProjectAndVisitMethod(project, method);
 
 //				visit(MethodInvocation node) {
 //					node.visit(new ASTConditionPara())
@@ -101,31 +99,33 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		
 	}
 
-	private void getASTFromIJavaProjectAndVisitMethod(IJavaProject project, Map<String, List<String>> map) {
+	private void getASTFromIJavaProjectAndVisitMethod(IJavaProject project, Map<String, Set<String>> map) {
 		try {
 			IPackageFragment[] packages = project.getPackageFragments();
 			for (IPackageFragment mypackage : packages) {
                 if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
                         for (ICompilationUnit unit : mypackage.getCompilationUnits()) {
-                                // Now create the AST for the ICompilationUnits
-                                CompilationUnit parse = parse(unit);
-                                parse.accept(new ASTVisitor() {
-                                	@Override
-                                	public boolean visit(MethodDeclaration node) {
-                                		MethodVisitor visitor = new MethodVisitor();
-                                		node.getBody().accept(visitor);
-                                		if (visitor.isReadOnly()) {
-                                			map.get("ReadOnly").add(node.resolveBinding().getKey());
-                                		}
-                                		if (Modifier.isSynchronized(node.resolveBinding().getModifiers())) {
+                            // Now create the AST for the ICompilationUnits
+                        	CompilationUnit parse = parse(unit);
+                            parse.accept(new ASTVisitor() {
+                            	@Override
+                            	public boolean visit(MethodDeclaration node) {
+                            		if (node.getBody()!= null) {
+                            			MethodVisitor visitor = new MethodVisitor();
+	                            		node.getBody().accept(visitor);
+	                            		if (visitor.isReadOnly()) {
+	                            			map.get("ReadOnly").add(node.resolveBinding().getKey());
+	                            		}
+	                            		if (Modifier.isSynchronized(node.resolveBinding().getModifiers())) {
+	                            			map.get("ThreadSafe").add(node.resolveBinding().getKey());
+	                            		}
+	                            		if (visitor.isThreadSafe()) {
                                 			map.get("ThreadSafe").add(node.resolveBinding().getKey());
                                 		}
-//                                		if (visitor.isThreadSafe()) {
-//                                			map.get("ThreadSafe").add(node.resolveBinding().getKey());
-//                                		}
-                                		return false;
-                                	}
-                                });
+                            		}
+                            		return false;
+                            	}
+                            });
 
                         }
                 }

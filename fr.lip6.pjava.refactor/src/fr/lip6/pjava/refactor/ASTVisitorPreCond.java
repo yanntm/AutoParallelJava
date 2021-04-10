@@ -207,19 +207,13 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	public boolean visit(ContinueStatement node) {
 		ASTNode parent = node.getParent();
 		// find out which loop has been continued
-		System.out.println("continue found");
 		while( parent.getNodeType() != ASTNode.ENHANCED_FOR_STATEMENT
 				&& parent.getNodeType() != ASTNode.FOR_STATEMENT
 				&& parent.getNodeType() != ASTNode.WHILE_STATEMENT
 				&& parent.getNodeType() != ASTNode.DO_STATEMENT ) {
 			parent = parent.getParent();
 		}
-		
-		System.out.println("equals="+(parent.equals(caller)));
-		System.out.println("parent=\n" + parent +"\ncaller=\n"+ caller);
-		
 		if(parent.equals(caller)) {
-			System.out.println("upgradble is false");
 			notInterrupted = false;
 			return false;
 		}

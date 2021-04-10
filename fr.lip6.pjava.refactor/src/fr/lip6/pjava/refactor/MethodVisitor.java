@@ -2,7 +2,6 @@ package fr.lip6.pjava.refactor;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
-import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.SynchronizedStatement;
@@ -38,5 +37,11 @@ public class MethodVisitor extends ASTVisitor {
 		threadSafe = true;
 		return false;
 	}
+
+	public boolean isThreadSafe() {
+		return threadSafe;
+	}
+	
+	
 
 }

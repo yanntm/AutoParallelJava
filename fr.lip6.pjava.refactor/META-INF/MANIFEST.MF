@@ -12,7 +12,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ltk.core.refactoring,
  org.eclipse.text,
  org.eclipse.jdt.core.manipulation
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: fr.lip6.pjava.refactor
 Bundle-ActivationPolicy: lazy
 Import-Package: org.eclipse.jdt.core.refactoring

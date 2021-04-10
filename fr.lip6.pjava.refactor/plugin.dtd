@@ -1,0 +1,15 @@
+<!ELEMENT plugin (extension)>
+<!ELEMENT extension (cleanUp,cleanUpOptionsInitializer,cleanUpConfigurationUI)>
+<!ATTLIST extension id NMTOKEN #REQUIRED>
+<!ATTLIST extension name NMTOKEN #REQUIRED>
+<!ATTLIST extension point NMTOKEN #REQUIRED>
+<!ELEMENT cleanUp (#PCDATA)>
+<!ATTLIST cleanUp class NMTOKEN #REQUIRED>
+<!ATTLIST cleanUp id NMTOKEN #REQUIRED>
+<!ELEMENT cleanUpOptionsInitializer (#PCDATA)>
+<!ATTLIST cleanUpOptionsInitializer class NMTOKEN #REQUIRED>
+<!ATTLIST cleanUpOptionsInitializer cleanUpKind NMTOKEN #REQUIRED>
+<!ELEMENT cleanUpConfigurationUI (#PCDATA)>
+<!ATTLIST cleanUpConfigurationUI class NMTOKEN #REQUIRED>
+<!ATTLIST cleanUpConfigurationUI name CDATA #REQUIRED>
+<!ATTLIST cleanUpConfigurationUI cleanUpKind NMTOKEN #REQUIRED>
