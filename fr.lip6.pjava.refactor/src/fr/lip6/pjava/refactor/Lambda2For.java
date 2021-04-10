@@ -77,21 +77,6 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			
 			//Creation AST de tout le projet
 			getASTFromIJavaProjectAndVisitMethod(project, method);
-
-//				visit(MethodInvocation node) {
-//					node.visit(new ASTConditionPara())
-//			switch astCon.type(){
-//			case "READ-ONly":
-//				method.get("Read-Only").add(node.getBinaryName())
-//				break;
-//			case "Thread-Safe":
-//				method.get("Thread-Safe").add(node.getBinaryName())
-//				break;
-//			case "Modification Object Courant":
-//				method.get("Modification Object Courant").add(node.getBinaryName())
-//				break;			
-//			
-//			});
 			
 		}
 		
@@ -132,7 +117,6 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 
         }
 		} catch (JavaModelException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

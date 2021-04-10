@@ -94,7 +94,7 @@ public class TransformationMap extends ASTVisitor {
 	@Override
 	public boolean visit(PostfixExpression node) {
 		// TODO verifier si seul operation ne marche pas a refaire
-		
+		nbInstruction++;
 		if (node.getNodeType() == ASTNode.SIMPLE_NAME 
 				&& !variableLocale.contains(((SimpleName)node.getOperand()).resolveBinding().getKey())
 				&& node.getOperator().equals(PostfixExpression.Operator.INCREMENT)) {
@@ -114,7 +114,7 @@ public class TransformationMap extends ASTVisitor {
 
 	@Override
 	public boolean visit(PrefixExpression node) {
-		// TODO Auto-generated method stub
+		nbInstruction++;
 		return false;
 	}
 
@@ -212,4 +212,15 @@ public class TransformationMap extends ASTVisitor {
 		return nbInstruction;
 	}
 	
+	public void end() {
+		if(map!=null) {
+			LambdaExpression le = (LambdaExpression) map.arguments().get(0);
+			SingleVariableDeclaration svd = (SingleVariableDeclaration)(le.parameters().get(0));
+		
+			if (le.getBody().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName)le.getBody()).getFullyQualifiedName().equals(svd.getName().getFullyQualifiedName()) ) {
+				map = terminale;
+			}
+		}
+
+	}
 }

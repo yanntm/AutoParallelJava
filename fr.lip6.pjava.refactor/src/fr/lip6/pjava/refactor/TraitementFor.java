@@ -86,10 +86,11 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		TransformationMap tMap = new TransformationMap(parameter);
 		if(tfb.getBody()!=null)tfb.getBody().accept(tMap);
 		else body.accept(tMap);
-		
+		tMap.end();
 		// We apply Map transformation
 		if(tMap.getNbInstruction()==1 && tMap.getMap()!=null && tMap.getTerminale()!=null) {
-
+			
+			
 			if(tfb.getFirst()!=null && tfb.getLast()!=null) {
 				tfb.getFirst().setExpression(replaceMethod);
 				tMap.getMap().setExpression(tfb.getLast());
