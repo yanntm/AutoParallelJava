@@ -87,6 +87,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		if(tfb.getBody()!=null)tfb.getBody().accept(tMap);
 		else body.accept(tMap);
 		tMap.end();
+		
 		// We apply Map transformation
 		if(tMap.getNbInstruction()==1 && tMap.getMap()!=null && tMap.getTerminale()!=null) {
 			
@@ -135,7 +136,6 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 				
 				st = ast.newExpressionStatement(res);
 				rewrite.replace(node, st, null); //We add our modification to the record
-				
 				
 				break;
 			default:
@@ -223,10 +223,22 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 	}
 
 	private boolean containsImport(Name name) {
-		for(Name n :  importAdded.get(this.name)) {
-			if (n.getFullyQualifiedName().equals(name.getFullyQualifiedName())) return true;
+		boolean test1 = false;
+		for (Object o : unit.imports()) {
+			ImportDeclaration im = (ImportDeclaration) o;
+			if (im.getName().getFullyQualifiedName().equals(name.getFullyQualifiedName())) {
+				test1 = true;
+				break;
+			}
+				
 		}
-		return false;
+		
+		for(Name n :  importAdded.get(this.name)) {
+			if (n.getFullyQualifiedName().equals(name.getFullyQualifiedName())) {
+				return true;
+			}
+		}
+		return test1;
 	}
 
 	/**

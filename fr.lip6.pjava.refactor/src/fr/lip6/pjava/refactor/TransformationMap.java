@@ -62,7 +62,7 @@ public class TransformationMap extends ASTVisitor {
 			if(map==null) return false;
 			
 			if(node.getOperator().equals(Assignment.Operator.PLUS_ASSIGN)) {
-				left = (SimpleName) node.getLeftHandSide();
+				left = node.getLeftHandSide();
 				LambdaExpression lb = ast.newLambdaExpression();
 				lb.setBody(ASTNode.copySubtree(ast, node.getRightHandSide()));
 				lb.parameters().add(ASTNode.copySubtree(ast, parameter));
@@ -213,7 +213,7 @@ public class TransformationMap extends ASTVisitor {
 	}
 	
 	public void end() {
-		if(map!=null) {
+		if(map!=null && map.arguments().size()==1) {
 			LambdaExpression le = (LambdaExpression) map.arguments().get(0);
 			SingleVariableDeclaration svd = (SingleVariableDeclaration)(le.parameters().get(0));
 		

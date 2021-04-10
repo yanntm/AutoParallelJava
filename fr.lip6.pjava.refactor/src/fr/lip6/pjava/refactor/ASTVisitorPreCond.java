@@ -12,6 +12,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ContinueStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -35,7 +36,9 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	/**
 	 * Use to verify if the enhancedFor can be upgradable
 	 */
-	private boolean isUpgradable, notInterrupted;
+	private boolean isUpgradable;
+	
+	private boolean notInterrupted = true;
 	/**
 	 * We keep the caller to be sure to not verify things outside of the EnhancedFor
 	 */
@@ -43,21 +46,17 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	/**
 	 * List of variables keys encountered in the EnhancedFor
 	 */
-	private List<String> varDeclaredInFor;
+	private List<String> varDeclaredInFor = new ArrayList<String>();
 	
-	private List<String> varUsedInsideDeclaredOutside;
+	private List<String> varUsedInsideDeclaredOutside  = new ArrayList<String>();
 	
 	/**
 	 * The constructor use to initiate the attributes
 	 * @param caller this the node calling this object
 	 */
 	public ASTVisitorPreCond(EnhancedForStatement caller) {
-		
 		this.caller = caller;
-		varDeclaredInFor = new ArrayList<String>();
-		varUsedInsideDeclaredOutside = new ArrayList<String>();
 		isUpgradable = isCollection(caller.getExpression());
-		notInterrupted = true;
 	}
 	
 	/**
@@ -65,7 +64,6 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	 * @return if the given EnhancedFor is Upgradable
 	 */
 	public boolean isUpgradable() {
-		// TODO ajouter cond 
 		return notInterrupted && (isUpgradable || varUsedInsideDeclaredOutside.size()==1);
 	}
 	
@@ -81,7 +79,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		//no problems with the for parameter variables 
 		String paramterKey;
 		if(caller instanceof EnhancedForStatement) {
-			paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+			paramterKey =caller.getParameter().resolveBinding().getKey();
 		}else {
 			return false;
 		}
@@ -89,11 +87,11 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		String varKey = null;
 		//verification du statut final
 		if(node.getRightHandSide().getNodeType()==ASTNode.QUALIFIED_NAME
-			&& ((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding().getKind()==ITypeBinding.VARIABLE 
+			&& ((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding().getKind()==IBinding.VARIABLE 
 			&& ( !( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).isEffectivelyFinal() &&
 			!Modifier.isFinal(( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).getModifiers()) ) 
 			||
-			node.getRightHandSide().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName) node.getRightHandSide()).resolveBinding().getKind()==ITypeBinding.VARIABLE 
+			node.getRightHandSide().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName) node.getRightHandSide()).resolveBinding().getKind()==IBinding.VARIABLE 
 			&& ( !( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).isEffectivelyFinal() &&
 			!Modifier.isFinal(( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).getModifiers())
 			
@@ -127,7 +125,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		//no problems with the for parameter variables 
 		String paramterKey;
 		if(caller instanceof EnhancedForStatement) {
-			paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+			paramterKey =caller.getParameter().resolveBinding().getKey();
 		}else {
 			return false;
 		}
@@ -154,7 +152,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		//no problems with the for parameter variables 
 		String paramterKey;
 		if(caller instanceof EnhancedForStatement) {
-			paramterKey =((EnhancedForStatement) caller).getParameter().resolveBinding().getKey();
+			paramterKey =caller.getParameter().resolveBinding().getKey();
 		}else {
 			return false;
 		}
