@@ -126,6 +126,7 @@ public class MethodVisitor extends ASTVisitor {
 		}
 		
 		String key = node.resolveMethodBinding().getKey();
+		//System.out.println(key);
 		if(map.get("NotParallelizable").contains(key)) {
 			modifLocal = false;
 			readOnly = false;

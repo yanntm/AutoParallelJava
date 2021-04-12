@@ -95,10 +95,10 @@ public class TransformationMap extends ASTVisitor {
 	public boolean visit(PostfixExpression node) {
 		// TODO verifier si seul operation ne marche pas a refaire
 		nbInstruction++;
-		if (node.getNodeType() == ASTNode.SIMPLE_NAME 
-				&& !variableLocale.contains(((SimpleName)node.getOperand()).resolveBinding().getKey())
-				&& node.getOperator().equals(PostfixExpression.Operator.INCREMENT)) {
-			//init map 
+		if (!variableLocale.contains(((SimpleName)node.getOperand()).resolveBinding().getKey())
+			&& node.getOperator().equals(PostfixExpression.Operator.INCREMENT)) {
+			String type = node.getOperand().resolveTypeBinding().getQualifiedName();
+			initMap(type);
 			map = ast.newMethodInvocation();
 			map.setName(ast.newSimpleName("map"));
 			
@@ -107,6 +107,8 @@ public class TransformationMap extends ASTVisitor {
 			terminale = ast.newMethodInvocation();
 			terminale.setName(ast.newSimpleName("count"));
 			terminale.setExpression(map);
+			
+			cas=1;
 		}
 		return false;
 	}

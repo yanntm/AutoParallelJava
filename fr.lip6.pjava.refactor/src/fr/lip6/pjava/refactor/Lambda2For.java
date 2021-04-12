@@ -41,7 +41,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 public class Lambda2For extends AbstractMultiFix implements ICleanUp {	 
 	private CleanUpOptions fOptions;
 	private RefactoringStatus fStatus;
-	private HashMap<String, Set<String>> method;
+	private HashMap<String, Set<String>> map;
 
 
 
@@ -71,14 +71,8 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		if (fOptions.isEnabled("cleanup.transform_enhanced_for")) { //$NON-NLS-1$
 			fStatus= new RefactoringStatus();
 
-			method = new HashMap<>();
-			method.put("ReadOnly", new HashSet<>());
-			method.put("ThreadSafe", new HashSet<>());
-			method.put("ModifLocal", new HashSet<>());
-			method.put("NotParallelizable", new HashSet<>());
-
 			//Creation AST de tout le projet
-			getASTFromIJavaProjectAndVisitMethod(project, method);
+			getASTFromIJavaProjectAndVisitMethod(project);
 
 		}
 
@@ -86,7 +80,14 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 
 	}
 
-	private void getASTFromIJavaProjectAndVisitMethod(IJavaProject project, Map<String, Set<String>> map) {
+	private void getASTFromIJavaProjectAndVisitMethod(IJavaProject project) {
+
+		map = new HashMap<>();
+		map.put("ReadOnly", new HashSet<>());
+		map.put("ThreadSafe", new HashSet<>());
+		map.put("ModifLocal", new HashSet<>());
+		map.put("NotParallelizable", new HashSet<>());
+
 		try {
 			IPackageFragment[] packages = project.getPackageFragments();
 			// quand on fiat le visitor et qu'il y a une dependances avec une methodes non visitée
@@ -169,7 +170,7 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 					if (visitorPreCond.isUpgradable() )
 					{
 						//Ne pas ajouter d'élément qui ne fait rien
-						rewriteOperations.add(new TraitementFor(cu, node, method));
+						rewriteOperations.add(new TraitementFor(cu, node, map));
 					}
 				}
 				return false;
