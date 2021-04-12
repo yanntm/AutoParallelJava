@@ -210,15 +210,14 @@ public class TransformationMap extends ASTVisitor {
 		return nbInstruction;
 	}
 	
-	public void end() {
-		if(map!=null && map.arguments().size()==1) {
-			LambdaExpression le = (LambdaExpression) map.arguments().get(0);
-			SingleVariableDeclaration svd = (SingleVariableDeclaration)(le.parameters().get(0));
-		
-			if (le.getBody().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName)le.getBody()).getFullyQualifiedName().equals(svd.getName().getFullyQualifiedName()) ) {
-				map = terminale;
-			}
-		}
-
-	}
+//	public void end() {
+//		if(map!=null && map.arguments().size()==1) {
+//			LambdaExpression le = (LambdaExpression) map.arguments().get(0);
+//			SingleVariableDeclaration svd = (SingleVariableDeclaration)(le.parameters().get(0));
+//		
+//			if (le.getBody().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName)le.getBody()).getFullyQualifiedName().equals(svd.getName().getFullyQualifiedName()) ) {
+//				map = terminale;
+//			}
+//		}
+//	}
 }

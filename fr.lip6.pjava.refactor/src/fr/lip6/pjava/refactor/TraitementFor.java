@@ -90,11 +90,11 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		TransformationMap tMap = new TransformationMap(parameter);
 		if(tfb.getBody()!=null)tfb.getBody().accept(tMap);
 		else body.accept(tMap);
-		tMap.end();
+		//tMap.end();
 		
 		// We apply Map transformation
 		if(tMap.getNbInstruction()==1 && tMap.getMap()!=null && tMap.getTerminale()!=null) {
-			
+			// replace stream by parallelStream because it is a map with sum or addAll
 			MethodInvocation parallel = ast.newMethodInvocation();
 			parallel.setExpression(replaceMethod);
 			parallel.setName(ast.newSimpleName("parallel"));
@@ -111,7 +111,6 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 					tMap.getMap().setExpression(parallel);
 				}
 			}
-			// replace stream by parallelStream because it is a map wiith sum or addAll
 			
 			switch (tMap.getCas()) {
 			case 1:
@@ -158,32 +157,67 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			
 			forEach.setName(ast.newSimpleName("forEach"));
 			
-			if(tfb.getFirst()!=null && tfb.getLast()!=null) {
-				tfb.getFirst().setExpression(replaceMethod);
-				forEach.setExpression(tfb.getLast());
-			}else {
-				if(tfb.getFirst()!=null) {
-					tfb.getFirst().setExpression(replaceMethod);
-					forEach.setExpression(tfb.getFirst());
-				}
-				else {
-					forEach.setExpression(replaceMethod);
-				}
-				
-			}
+
 			
 			//We create the Lambda Expression for the ForEach
+			boolean parallelizable;
 			LambdaExpression forEachCorps = ast.newLambdaExpression();
 			// TODO verifier si body parralelisable
-			if(tfb.getBody()!=null) forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody()));
-			else {
+			if(tfb.getBody()!=null) {
+				BodyParallelizable bP = new BodyParallelizable(methode);
+				tfb.getBody().accept(bP);
+				parallelizable = bP.isParallelizable(); 
+				forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody())); //filter qui est appliquer
+			}else {
+				//pas de filter, juste for each
 				if ( !(body instanceof Block) ){
 					Block b = ast.newBlock();
 					b.statements().add(ASTNode.copySubtree(ast, body));
 					body = b;
 				}
+				BodyParallelizable bP = new BodyParallelizable(methode);
+				body.accept(bP);
+				parallelizable = bP.isParallelizable();
 				forEachCorps.setBody(ASTNode.copySubtree(ast, body));
 			}
+			
+
+
+			
+			if(tfb.getFirst()!=null && tfb.getLast()!=null) {
+				if(parallelizable) {
+					MethodInvocation parallel = ast.newMethodInvocation();
+					parallel.setExpression(replaceMethod);
+					parallel.setName(ast.newSimpleName("parallel"));
+					tfb.getFirst().setExpression(parallel);
+				}else {
+					tfb.getFirst().setExpression(replaceMethod);
+				}
+				forEach.setExpression(tfb.getLast());
+			}else {
+				if(tfb.getFirst()!=null) {
+					if (parallelizable) {
+						MethodInvocation parallel = ast.newMethodInvocation();
+						parallel.setExpression(replaceMethod);
+						parallel.setName(ast.newSimpleName("parallel"));
+						tfb.getFirst().setExpression(parallel);
+					}else {
+						tfb.getFirst().setExpression(replaceMethod);
+					}
+					forEach.setExpression(tfb.getFirst());
+				}
+				else {
+					if (parallelizable) {
+						MethodInvocation parallel = ast.newMethodInvocation();
+						parallel.setExpression(replaceMethod);
+						parallel.setName(ast.newSimpleName("parallel"));
+						forEach.setExpression(parallel);
+					}else {
+						forEach.setExpression(replaceMethod);
+					}
+				}
+			}
+			
 			forEachCorps.parameters().add(ASTNode.copySubtree(ast,parameter));
 			forEach.arguments().add(forEachCorps);
 			ExpressionStatement st = ast.newExpressionStatement(forEach);
