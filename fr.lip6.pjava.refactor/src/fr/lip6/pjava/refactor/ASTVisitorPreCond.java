@@ -94,8 +94,6 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			node.getRightHandSide().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName) node.getRightHandSide()).resolveBinding().getKind()==IBinding.VARIABLE 
 			&& ( !( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).isEffectivelyFinal() &&
 			!Modifier.isFinal(( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).getModifiers())
-			
-			
 		) ){
 			isUpgradable = false;
 			return false;

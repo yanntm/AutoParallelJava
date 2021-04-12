@@ -161,7 +161,6 @@ public class TransformationMap extends ASTVisitor {
 			}
 		}
 		
-		
 		return false;
 	}
 	
@@ -194,7 +193,6 @@ public class TransformationMap extends ASTVisitor {
 			}
 		}
 		return false;
-		
 	}
 
 	public int getCas() {

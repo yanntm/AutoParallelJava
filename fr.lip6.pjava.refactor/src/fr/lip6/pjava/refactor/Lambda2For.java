@@ -73,7 +73,7 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			Map<String, Set<String>> method = new HashMap<>();
 			method.put("ReadOnly", new HashSet<>());
 			method.put("ThreadSafe", new HashSet<>());
-			method.put("Modification Object Courant", new HashSet<>());
+			method.put("ModifLocal", new HashSet<>());
 			
 			//Creation AST de tout le projet
 			getASTFromIJavaProjectAndVisitMethod(project, method);
@@ -87,17 +87,24 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	private void getASTFromIJavaProjectAndVisitMethod(IJavaProject project, Map<String, Set<String>> map) {
 		try {
 			IPackageFragment[] packages = project.getPackageFragments();
+			// quand on fiat le visitor et qu'il y a une dependances avec une methodes non visitée
+			// on le mets dans la liste et on revisite une fois quand on a tout visité
+			List<MethodDeclaration> methodProblem = new ArrayList<MethodDeclaration>();
 			for (IPackageFragment mypackage : packages) {
                 if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
-                        for (ICompilationUnit unit : mypackage.getCompilationUnits()) {
-                            // Now create the AST for the ICompilationUnits
-                        	CompilationUnit parse = parse(unit);
-                            parse.accept(new ASTVisitor() {
-                            	@Override
-                            	public boolean visit(MethodDeclaration node) {
-                            		if (node.getBody()!= null) {
-                            			MethodVisitor visitor = new MethodVisitor();
-	                            		node.getBody().accept(visitor);
+                	for (ICompilationUnit unit : mypackage.getCompilationUnits()) {
+                        // Now create the AST for the ICompilationUnits
+                    	CompilationUnit parse = parse(unit);
+                        parse.accept(new ASTVisitor() {
+                        	@Override
+                        	public boolean visit(MethodDeclaration node) {
+                        		if (node.getBody()!= null) {
+                        			MethodVisitor visitor = new MethodVisitor(map);
+                            		node.getBody().accept(visitor);
+                            		
+                            		if(visitor.isProblem()) {
+                            			methodProblem.add(node);
+                            		}else {
 	                            		if (visitor.isReadOnly()) {
 	                            			map.get("ReadOnly").add(node.resolveBinding().getKey());
 	                            		}
@@ -107,12 +114,16 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	                            		if (visitor.isThreadSafe()) {
                                 			map.get("ThreadSafe").add(node.resolveBinding().getKey());
                                 		}
+	                            		if ( visitor.isModifLocal()) {
+	                            			map.get("ModifLocal").add(node.resolveBinding().getKey());
+	                            		}
                             		}
-                            		return false;
-                            	}
-                            });
+                        		}
+                        		return false;
+                        	}
+                        });
 
-                        }
+                    }
                 }
 
         }

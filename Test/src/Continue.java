@@ -30,7 +30,7 @@ public class Continue {
 				}
 			}
 		}
-/*
+
 		for(Personne p1 :pers) {
 			for(Personne p : pers) {
 				if(p.age < 2 ) {
@@ -50,9 +50,9 @@ public class Continue {
 					p.anniversaire();
 				}
 			}
-		}*/
-	}
+		}
 	
+	}
 	
 	public static int methode(int i) {
 		return i+1;
