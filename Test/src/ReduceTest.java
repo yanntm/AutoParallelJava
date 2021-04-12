@@ -38,6 +38,13 @@ public class ReduceTest {
 //        res = temp.stream().filter(i->i>18).map(i->i).collect(Collectors.toList());
 
 //        System.out.println(somme+"");
+        
+        List<Main.Personne> pers = new ArrayList<>();
+        
+		somme = 0;
+		for(Main.Personne p : pers) {
+			somme++;
+		}
 
 
         int test = temp.stream().mapToInt(i->i).sum();

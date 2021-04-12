@@ -4,6 +4,7 @@ import java.util.List;
 
 public class While {
 	static int  size =0;
+	
 	public static void main(String[] args) {
 		List<Integer> l = new ArrayList<>();
 		size = 7;
