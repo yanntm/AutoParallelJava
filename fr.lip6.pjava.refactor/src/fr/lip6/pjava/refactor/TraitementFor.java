@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.dom.AST;
@@ -44,18 +45,21 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 	private Statement node;
 	private static Map<String, List<Name>> importAdded = new HashMap<>();
 	private String name;
+	private HashMap<String, Set<String>> methode;
 
 	/**
 	 * The constructor used to initiate the attribute
 	 * @param unit The CompilationUnit of the document
+	 * @param method 
 	 * @param forATraiter 
 	 */
-	public TraitementFor(CompilationUnit unit, EnhancedForStatement node) {
+	public TraitementFor(CompilationUnit unit, EnhancedForStatement node, HashMap<String,Set<String>> method) {
 		name = unit.getJavaElement().getElementName();
 		List<Name> l = importAdded.get(name);
 		if (l == null) importAdded.put(name, new ArrayList<>());
 		this.unit=unit;
 		this.node = node;
+		this.methode = method;
 	}
 	
 	@SuppressWarnings({ "unchecked" })
@@ -91,21 +95,24 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		// We apply Map transformation
 		if(tMap.getNbInstruction()==1 && tMap.getMap()!=null && tMap.getTerminale()!=null) {
 			
+			MethodInvocation parallel = ast.newMethodInvocation();
+			parallel.setExpression(replaceMethod);
+			parallel.setName(ast.newSimpleName("parallel"));
 			
 			if(tfb.getFirst()!=null && tfb.getLast()!=null) {
-				tfb.getFirst().setExpression(replaceMethod);
+				tfb.getFirst().setExpression(parallel);
 				tMap.getMap().setExpression(tfb.getLast());
 			}else {
 				if(tfb.getFirst()!=null) {
-					tfb.getFirst().setExpression(replaceMethod);
+					tfb.getFirst().setExpression(parallel);
 					tMap.getMap().setExpression(tfb.getFirst());
 				}
 				else {
-					tMap.getMap().setExpression(replaceMethod);
+					tMap.getMap().setExpression(parallel);
 				}
 			}
 			// replace stream by parallelStream because it is a map wiith sum or addAll
-			replaceMethod.setName(ast.newSimpleName("parallelStream"));
+			
 			switch (tMap.getCas()) {
 			case 1:
 				Assignment a = ast.newAssignment();
@@ -144,7 +151,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			
 
 		}else {
-				
+				//replaceMethod.setName(ast.newSimpleName("parallelStream"));
 			
 			//There is no If, so there isn't a filter. We create directly the forEach Method
 			MethodInvocation forEach = ast.newMethodInvocation();

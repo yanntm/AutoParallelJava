@@ -41,9 +41,10 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 public class Lambda2For extends AbstractMultiFix implements ICleanUp {	 
 	private CleanUpOptions fOptions;
 	private RefactoringStatus fStatus;
-	
-	
-	
+	private HashMap<String, Set<String>> method;
+
+
+
 	@Override
 	public String[] getStepDescriptions() {
 		if(fOptions.isEnabled("cleanup.transform_enhanced_for")) {
@@ -51,38 +52,38 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		}
 		return null;
 	}
-	
+
 	@Override
 	public CleanUpRequirements getRequirements() {
 		return new CleanUpRequirements(true, true, false, null);   
 	}
-	
+
 	@Override
 	public void setOptions(CleanUpOptions options) {
 		Assert.isLegal(options != null);
 		Assert.isTrue(fOptions == null);
 		fOptions= options;  
 	}
-	
+
 	@Override
 	public RefactoringStatus checkPreConditions(IJavaProject project, ICompilationUnit[] compilationUnits,
 			IProgressMonitor monitor) throws CoreException {
 		if (fOptions.isEnabled("cleanup.transform_enhanced_for")) { //$NON-NLS-1$
 			fStatus= new RefactoringStatus();
-			
-			Map<String, Set<String>> method = new HashMap<>();
+
+			method = new HashMap<>();
 			method.put("ReadOnly", new HashSet<>());
 			method.put("ThreadSafe", new HashSet<>());
 			method.put("ModifLocal", new HashSet<>());
 			method.put("NotParallelizable", new HashSet<>());
-			
+
 			//Creation AST de tout le projet
 			getASTFromIJavaProjectAndVisitMethod(project, method);
-			
+
 		}
-		
+
 		return new RefactoringStatus();
-		
+
 	}
 
 	private void getASTFromIJavaProjectAndVisitMethod(IJavaProject project, Map<String, Set<String>> map) {
@@ -92,48 +93,46 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			// on le mets dans la liste et on revisite une fois quand on a tout visité
 			List<MethodDeclaration> methodProblem = new ArrayList<MethodDeclaration>();
 			for (IPackageFragment mypackage : packages) {
-                if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
-                	for (ICompilationUnit unit : mypackage.getCompilationUnits()) {
-                        // Now create the AST for the ICompilationUnits
-                    	CompilationUnit parse = parse(unit);
-                        parse.accept(new ASTVisitor() {
-                        	@Override
-                        	public boolean visit(MethodDeclaration node) {
-                        		if (node.getBody()!= null) {
-                        			MethodVisitor visitor = new MethodVisitor(map);
-                            		node.getBody().accept(visitor);
-                            		
-                            		if(visitor.isProblem()) {
-                            			methodProblem.add(node);
-                            		}else {
-	                            		if (visitor.isReadOnly()) {
-	                            			map.get("ReadOnly").add(node.resolveBinding().getKey());
-	                            		}
-	                            		else if (Modifier.isSynchronized(node.resolveBinding().getModifiers())) {
-	                            			map.get("ThreadSafe").add(node.resolveBinding().getKey());
-	                            		}
-	                            		else if (visitor.isThreadSafe()) {
-                                			map.get("ThreadSafe").add(node.resolveBinding().getKey());
-                                		}
-	                            		else if ( visitor.isModifLocal()) {
-	                            			map.get("ModifLocal").add(node.resolveBinding().getKey());
-	                            		} else {
-	                            			map.get("NotParallelizable").add(node.resolveBinding().getKey());
-	                            		}
-                            		}
-                        		}
-                        		return false;
-                        	}
-                        });
+				if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
+					for (ICompilationUnit unit : mypackage.getCompilationUnits()) {
+						// Now create the AST for the ICompilationUnits
+						CompilationUnit parse = parse(unit);
+						parse.accept(new ASTVisitor() {
+							@Override
+							public boolean visit(MethodDeclaration node) {
+								if (node.getBody()!= null) {
+									MethodVisitor visitor = new MethodVisitor(map);
+									node.getBody().accept(visitor);
 
-                    }
-                }
+									if(visitor.isProblem()) {
+										methodProblem.add(node);
+									}else {
+										methodDistribution(map, node, visitor);
+									}
+								}
+								return false;
+							}
+						});
+					}
+				}
+			}
+			int cpt = 0;
+			for (MethodDeclaration method : methodProblem) {
+				MethodVisitor visitor = new MethodVisitor(map);
+				method.getBody().accept(visitor);
+				if(visitor.isProblem()) {
+					cpt++;
+				}else {
+					methodDistribution(map, method, visitor);
 
-        }
+				}
+			}
+			System.out.println("Il y a " + cpt + " problemes non resolu(s).");
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		}
 	}
+
 
 	@Override
 	public RefactoringStatus checkPostConditions(IProgressMonitor monitor) throws CoreException {
@@ -159,42 +158,60 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		List<CompilationUnitRewriteOperation> rewriteOperations = new ArrayList<>();
 		TraitementFor.clear();
 		cu.accept(new ASTVisitor() {
-			
+
 			@Override
 			public boolean visit(EnhancedForStatement node) {
-				
+
 				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
 				if (visitorPreCond.isUpgradable()) {
 					node.getBody().accept(visitorPreCond);
-					
+
 					if (visitorPreCond.isUpgradable() )
 					{
 						//Ne pas ajouter d'élément qui ne fait rien
-						rewriteOperations.add(new TraitementFor(cu, node));
+						rewriteOperations.add(new TraitementFor(cu, node, method));
 					}
 				}
 				return false;
 			}
 
 		});
-	
-		
-		 if(rewriteOperations.isEmpty())return null;
-		 else return new CompilationUnitRewriteOperationsFix("Transformation of EnhancedFor to Stream", cu,
-				 rewriteOperations.toArray(new CompilationUnitRewriteOperation[rewriteOperations.size()]));
+
+
+		if(rewriteOperations.isEmpty())return null;
+		else return new CompilationUnitRewriteOperationsFix("Transformation of EnhancedFor to Stream", cu,
+				rewriteOperations.toArray(new CompilationUnitRewriteOperation[rewriteOperations.size()]));
 	}
-	
+
 	@Override
 	protected ICleanUpFix createFix(CompilationUnit unit, IProblemLocation[] problems) throws CoreException {
 		return null;
 	}
 
-	
-    private static CompilationUnit parse(ICompilationUnit unit) {
-        ASTParser parser = ASTParser.newParser(AST.JLS15);
-        parser.setKind(ASTParser.K_COMPILATION_UNIT);
-        parser.setSource(unit);
-        parser.setResolveBindings(true);
-        return (CompilationUnit) parser.createAST(null); // parse
-}
+
+	private static CompilationUnit parse(ICompilationUnit unit) {
+		ASTParser parser = ASTParser.newParser(AST.JLS15);
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+		parser.setSource(unit);
+		parser.setResolveBindings(true);
+		return (CompilationUnit) parser.createAST(null); // parse
+	}
+
+	private void methodDistribution(Map<String, Set<String>> map, MethodDeclaration node,
+			MethodVisitor visitor) {
+		if (visitor.isReadOnly()) {
+			map.get("ReadOnly").add(node.resolveBinding().getKey());
+		}
+		else if (Modifier.isSynchronized(node.resolveBinding().getModifiers())) {
+			map.get("ThreadSafe").add(node.resolveBinding().getKey());
+		}
+		else if (visitor.isThreadSafe()) {
+			map.get("ThreadSafe").add(node.resolveBinding().getKey());
+		}
+		else if ( visitor.isModifLocal()) {
+			map.get("ModifLocal").add(node.resolveBinding().getKey());
+		} else {
+			map.get("NotParallelizable").add(node.resolveBinding().getKey());
+		}
+	}
 }
