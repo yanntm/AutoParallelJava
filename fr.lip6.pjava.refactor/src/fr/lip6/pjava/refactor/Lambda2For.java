@@ -74,6 +74,7 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			method.put("ReadOnly", new HashSet<>());
 			method.put("ThreadSafe", new HashSet<>());
 			method.put("ModifLocal", new HashSet<>());
+			method.put("NotParallelizable", new HashSet<>());
 			
 			//Creation AST de tout le projet
 			getASTFromIJavaProjectAndVisitMethod(project, method);
@@ -108,14 +109,16 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	                            		if (visitor.isReadOnly()) {
 	                            			map.get("ReadOnly").add(node.resolveBinding().getKey());
 	                            		}
-	                            		if (Modifier.isSynchronized(node.resolveBinding().getModifiers())) {
+	                            		else if (Modifier.isSynchronized(node.resolveBinding().getModifiers())) {
 	                            			map.get("ThreadSafe").add(node.resolveBinding().getKey());
 	                            		}
-	                            		if (visitor.isThreadSafe()) {
+	                            		else if (visitor.isThreadSafe()) {
                                 			map.get("ThreadSafe").add(node.resolveBinding().getKey());
                                 		}
-	                            		if ( visitor.isModifLocal()) {
+	                            		else if ( visitor.isModifLocal()) {
 	                            			map.get("ModifLocal").add(node.resolveBinding().getKey());
+	                            		} else {
+	                            			map.get("NotParallelizable").add(node.resolveBinding().getKey());
 	                            		}
                             		}
                         		}

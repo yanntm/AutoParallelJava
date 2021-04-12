@@ -86,15 +86,16 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		Expression left = node.getLeftHandSide();
 		String varKey = null;
 		//verification du statut final
-		if(node.getRightHandSide().getNodeType()==ASTNode.QUALIFIED_NAME
+		if(
+			node.getRightHandSide().getNodeType()==ASTNode.QUALIFIED_NAME
 			&& ((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding().getKind()==IBinding.VARIABLE 
-			&& ( !( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).isEffectivelyFinal() &&
-			!Modifier.isFinal(( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).getModifiers()) ) 
+			&& ( !( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).isEffectivelyFinal() 
+					&& !Modifier.isFinal(( (IVariableBinding )((QualifiedName) node.getRightHandSide()).getQualifier().resolveBinding()).getModifiers()) ) 
 			||
 			node.getRightHandSide().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName) node.getRightHandSide()).resolveBinding().getKind()==IBinding.VARIABLE 
-			&& ( !( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).isEffectivelyFinal() &&
-			!Modifier.isFinal(( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).getModifiers())
-		) ){
+			&& ( !( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).isEffectivelyFinal()
+					&& !Modifier.isFinal(( (IVariableBinding )((SimpleName) node.getRightHandSide()).resolveBinding()).getModifiers()) )
+		 ) {
 			isUpgradable = false;
 			return false;
 		}
