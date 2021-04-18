@@ -32,6 +32,10 @@ import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
+import generation.graphe.methode.invocation.fr.lip6.puck.graph.PuckGraph;
+import generation.graphe.methode.invocation.fr.lip6.puck.parse.GraphBuilder;
+import generation.graphe.methode.invocation.fr.lip6.puck.parse.JavaParserHelper;
+
 /**
  * Class that will be call when we ask for a Clean-Up
  * @author Teillet & Capitanio
@@ -70,9 +74,15 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			IProgressMonitor monitor) throws CoreException {
 		if (fOptions.isEnabled("cleanup.transform_enhanced_for")) { //$NON-NLS-1$
 			fStatus= new RefactoringStatus();
-
-			//Creation AST de tout le projet
-			getASTFromIJavaProjectAndVisitMethod(project);
+			
+			List<CompilationUnit> parsedCu = JavaParserHelper.parseSources(project, compilationUnits,monitor);
+			
+			PuckGraph graph = GraphBuilder.collectGraph(parsedCu);
+			
+			System.out.println(graph);
+			
+//			Creation AST de tout le projet
+//			getASTFromIJavaProjectAndVisitMethod(project);
 
 		}
 
