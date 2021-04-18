@@ -35,8 +35,6 @@ public class MethodVisitor extends ASTVisitor {
 		localVariable.add(node.resolveBinding().getKey());
 		return super.visit(node);
 	}
-
-	
 	
 	@Override
 	public boolean visit(Assignment node) {	
