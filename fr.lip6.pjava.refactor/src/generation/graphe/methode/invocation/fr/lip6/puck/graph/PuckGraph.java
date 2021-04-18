@@ -58,6 +58,7 @@ public class PuckGraph {
 	public Set<Integer> getSetDeclaration (String name) {
 		return setDeclarations.getOrDefault(name, Collections.emptySet());
 	}
+	
 	public static class Rule {
 		public String text;
 		public final Set<Integer> hide;
@@ -68,6 +69,7 @@ public class PuckGraph {
 			this.text = text;
 		}
 	}
+	
 	public void addRule (Set<Integer> hide, Set<Integer> from, String text) {
 		this.rules.add (new Rule(hide,from, text));
 	}
