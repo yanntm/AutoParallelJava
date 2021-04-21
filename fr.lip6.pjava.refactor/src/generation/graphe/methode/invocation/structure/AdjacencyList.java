@@ -5,9 +5,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
+
 import generation.graphe.methode.invocation.fr.lip6.move.gal.util.MatrixCol;
 
 public class AdjacencyList {
+	
 	private Set<Integer>[] graph;
 	
 	@SuppressWarnings("unchecked")
@@ -24,6 +27,12 @@ public class AdjacencyList {
 		}
 	}
 	
+
+
+	public int size() {
+		return graph.length;
+	}
+	
 	public Set<Integer>[] getGraph() {
 		return graph;
 	}
@@ -38,9 +47,28 @@ public class AdjacencyList {
 		return res;
 	}
 	
-	public static AdjacencyList matrixProduct(AdjacencyList graph) {
-		return null;
+	public List<List<Integer>> findCycles() {
+		List<List<Integer>> res = new ArrayList<>();
+		for (int i=0; i < graph.length; i++) {
+			dfs(res, i, i, new ArrayList<Integer>(), new boolean[graph.length] );
+			
+		}
+		return res;
 	}
+
 	
 	
+	public void dfs(List<List<Integer>> res, int src, int current, List<Integer> stack, boolean[] visited) {
+		stack.add(current);
+		visited[current] = true;
+		for(int i : graph[current]) {
+			if (current == src) {
+				res.add(new ArrayList<>(stack)); // TODO gerer les multi insertion
+			} else if (!visited[i]) {
+				dfs(res, src, i, stack, visited);
+			}
+		}
+		stack.remove(stack.size()-1);
+		
+	}
 }
