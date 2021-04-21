@@ -24,6 +24,7 @@ import generation.graphe.methode.invocation.fr.lip6.move.gal.util.MatrixCol;
  */
 public class DependencyGraph {
 	private MatrixCol graph;
+	//private AdjacencyList graph
 	private Map<Integer,Map<Integer,List<ASTNode>>> reasons = new HashMap<>();
 	
 	public DependencyGraph(int nbnodes) {

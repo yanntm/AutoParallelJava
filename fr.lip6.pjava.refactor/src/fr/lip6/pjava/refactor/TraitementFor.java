@@ -46,6 +46,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 	private static Map<String, List<Name>> importAdded = new HashMap<>();
 	private String name;
 	private HashMap<String, Set<String>> methode;
+	private MethodInvocation mapTo;
 
 	/**
 	 * The constructor used to initiate the attribute
@@ -71,7 +72,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		Expression expression = ((EnhancedForStatement) node).getExpression();
 		Statement body = ((EnhancedForStatement) node).getBody();
 		SingleVariableDeclaration parameter = ((EnhancedForStatement) node).getParameter();
-		
+//		parameter.setType(null);
 		verifParameter(parameter, ast);
 		
 		
@@ -162,6 +163,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			//We create the Lambda Expression for the ForEach
 			boolean parallelizable;
 			LambdaExpression forEachCorps = ast.newLambdaExpression();
+			forEachCorps.setParentheses(false);
 			// TODO verifier si body parralelisable
 			if(tfb.getBody()!=null) {
 				BodyParallelizable bP = new BodyParallelizable(methode);
@@ -217,7 +219,6 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 					}
 				}
 			}
-			
 			forEachCorps.parameters().add(ASTNode.copySubtree(ast,parameter));
 			forEach.arguments().add(forEachCorps);
 			ExpressionStatement st = ast.newExpressionStatement(forEach);

@@ -64,6 +64,7 @@ public class TransformationMap extends ASTVisitor {
 			if(node.getOperator().equals(Assignment.Operator.PLUS_ASSIGN)) {
 				left = node.getLeftHandSide();
 				LambdaExpression lb = ast.newLambdaExpression();
+				lb.setParentheses(false);
 				lb.setBody(ASTNode.copySubtree(ast, node.getRightHandSide()));
 				lb.parameters().add(ASTNode.copySubtree(ast, parameter));
 				
@@ -143,6 +144,7 @@ public class TransformationMap extends ASTVisitor {
 				left = node.getExpression(); 
 				
 				LambdaExpression lb = ast.newLambdaExpression();
+				lb.setParentheses(false);
 				lb.setBody(ASTNode.copySubtree(ast, (ASTNode) node.arguments().get(0)));
 				lb.parameters().add(ASTNode.copySubtree(ast,parameter));
 				

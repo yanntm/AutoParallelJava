@@ -1,5 +1,6 @@
 package fr.lip6.pjava.refactor;
 
+import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +18,7 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -35,6 +37,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import generation.graphe.methode.invocation.fr.lip6.puck.graph.PuckGraph;
 import generation.graphe.methode.invocation.fr.lip6.puck.parse.GraphBuilder;
 import generation.graphe.methode.invocation.fr.lip6.puck.parse.JavaParserHelper;
+import generation.graphe.methode.invocation.structure.AdjacencyList;
 
 /**
  * Class that will be call when we ask for a Clean-Up
@@ -79,10 +82,19 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			
 			PuckGraph graph = GraphBuilder.collectGraph(parsedCu);
 			
-			System.out.println(graph);
+			AdjacencyList graphAdj = new AdjacencyList(graph.getUseGraph().getGraph());
+			
+			
+			
+//			try {
+//				graph.exportDot("D:\\Users\\teill\\Documents\\test.dot");
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 			
 //			Creation AST de tout le projet
-//			getASTFromIJavaProjectAndVisitMethod(project);
+			getASTFromIJavaProjectAndVisitMethod(project);
 
 		}
 
@@ -98,50 +110,50 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		map.put("ModifLocal", new HashSet<>());
 		map.put("NotParallelizable", new HashSet<>());
 
-		try {
-			IPackageFragment[] packages = project.getPackageFragments();
-			// quand on fiat le visitor et qu'il y a une dependances avec une methodes non visitée
-			// on le mets dans la liste et on revisite une fois quand on a tout visité
-			List<MethodDeclaration> methodProblem = new ArrayList<MethodDeclaration>();
-			for (IPackageFragment mypackage : packages) {
-				if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
-					for (ICompilationUnit unit : mypackage.getCompilationUnits()) {
-						// Now create the AST for the ICompilationUnits
-						CompilationUnit parse = parse(unit);
-						parse.accept(new ASTVisitor() {
-							@Override
-							public boolean visit(MethodDeclaration node) {
-								if (node.getBody()!= null) {
-									MethodVisitor visitor = new MethodVisitor(map);
-									node.getBody().accept(visitor);
-
-									if(visitor.isProblem()) {
-										methodProblem.add(node);
-									}else {
-										methodDistribution(map, node, visitor);
-									}
-								}
-								return false;
-							}
-						});
-					}
-				}
-			}
-			int cpt = 0;
-			for (MethodDeclaration method : methodProblem) {
-				MethodVisitor visitor = new MethodVisitor(map);
-				method.getBody().accept(visitor);
-				if(visitor.isProblem()) {
-					cpt++;
-				}else {
-					methodDistribution(map, method, visitor);
-
-				}
-			}
-			System.out.println("Il y a " + cpt + " problemes non resolu(s).");
-		} catch (JavaModelException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			IPackageFragment[] packages = project.getPackageFragments();
+//			// quand on fiat le visitor et qu'il y a une dependances avec une methodes non visitée
+//			// on le mets dans la liste et on revisite une fois quand on a tout visité
+//			List<MethodDeclaration> methodProblem = new ArrayList<MethodDeclaration>();
+//			for (IPackageFragment mypackage : packages) {
+//				if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
+//					for (ICompilationUnit unit : mypackage.getCompilationUnits()) {
+//						// Now create the AST for the ICompilationUnits
+//						CompilationUnit parse = parse(unit);
+//						parse.accept(new ASTVisitor() {
+//							@Override
+//							public boolean visit(MethodDeclaration node) {
+//								if (node.getBody()!= null) {
+//									MethodVisitor visitor = new MethodVisitor(map);
+//									node.getBody().accept(visitor);
+//
+//									if(visitor.isProblem()) {
+//										methodProblem.add(node);
+//									}else {
+//										methodDistribution(map, node, visitor);
+//									}
+//								}
+//								return false;
+//							}
+//						});
+//					}
+//				}
+//			}
+//			int cpt = 0;
+//			for (MethodDeclaration method : methodProblem) {
+//				MethodVisitor visitor = new MethodVisitor(map);
+//				method.getBody().accept(visitor);
+//				if(visitor.isProblem()) {
+//					cpt++;
+//				}else {
+//					methodDistribution(map, method, visitor);
+//
+//				}
+//			}
+//			System.out.println("Il y a " + cpt + " problemes non resolu(s).");
+//		} catch (JavaModelException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 
@@ -224,5 +236,20 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		} else {
 			map.get("NotParallelizable").add(node.resolveBinding().getKey());
 		}
+	}
+	
+	private List<ASTNode> findLeafs(PuckGraph pg){
+		return null;
+	}
+	
+	private List<List<ASTNode>>findCycle(PuckGraph pg){
+		return null;
+	}
+	
+	private void removeElement(MethodDeclaration node, PuckGraph pg) {
+		int i = pg.findIndex(node.resolveBinding());
+		pg.getUseGraph().getGraph().deleteColumn(i);
+		pg.getUseGraph().getGraph().deleteRow(i);
+//		pg.getNodes().
 	}
 }
