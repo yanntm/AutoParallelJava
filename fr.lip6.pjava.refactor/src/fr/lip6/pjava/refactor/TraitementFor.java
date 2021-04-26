@@ -46,7 +46,6 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 	private static Map<String, List<Name>> importAdded = new HashMap<>();
 	private String name;
 	private HashMap<String, Set<String>> methode;
-	private MethodInvocation mapTo;
 
 	/**
 	 * The constructor used to initiate the attribute
@@ -72,8 +71,11 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		Expression expression = ((EnhancedForStatement) node).getExpression();
 		Statement body = ((EnhancedForStatement) node).getBody();
 		SingleVariableDeclaration parameter = ((EnhancedForStatement) node).getParameter();
-//		parameter.setType(null);
-		verifParameter(parameter, ast);
+		
+		MethodInvocation mapTo = verifParameter2(parameter, ast);
+//		verifParameter(parameter, ast);
+		
+		
 		
 		
 		//We call the accept method on the AST, that will visit all the nodes, and use a personalized ASTVisitor to apply our changes
@@ -81,7 +83,17 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		
 		//Verification du type de tableau sur lequel on veut stream
 		MethodInvocation replaceMethod = detectCollectionType(ast, expression, t, rewrite);
-
+		
+		if(mapTo!=null) {
+			LambdaExpression lb = ast.newLambdaExpression();
+			lb.setParentheses(false);
+			lb.setBody(ASTNode.copySubtree(ast,parameter.getName()));
+			lb.parameters().add(ASTNode.copySubtree(ast, parameter));
+			
+			mapTo.arguments().add(lb);
+//			mapTo.setExpression(replaceMethod);
+		}
+		
 		//Creation of : <collection>.stream()
 		
 		// Method to copy an ASTNode and use it elsewhere : ASTNode.copySubtree(AST, nodeToCopy))
@@ -97,6 +109,8 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		if(tMap.getNbInstruction()==1 && tMap.getMap()!=null && tMap.getTerminale()!=null) {
 			// replace stream by parallelStream because it is a map with sum or addAll
 			MethodInvocation parallel = ast.newMethodInvocation();
+//			if(mapTo!=null)parallel.setExpression(mapTo);
+//			else parallel.setExpression(replaceMethod);
 			parallel.setExpression(replaceMethod);
 			parallel.setName(ast.newSimpleName("parallel"));
 			
@@ -151,7 +165,8 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			
 
 		}else {
-				//replaceMethod.setName(ast.newSimpleName("parallelStream"));
+			//replaceMethod.setName(ast.newSimpleName("parallelStream"));
+			if(mapTo!=null)mapTo.setExpression(replaceMethod);
 			
 			//There is no If, so there isn't a filter. We create directly the forEach Method
 			MethodInvocation forEach = ast.newMethodInvocation();
@@ -189,33 +204,39 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			if(tfb.getFirst()!=null && tfb.getLast()!=null) {
 				if(parallelizable) {
 					MethodInvocation parallel = ast.newMethodInvocation();
-					parallel.setExpression(replaceMethod);
+					if(mapTo!=null)parallel.setExpression(mapTo);
+					else parallel.setExpression(replaceMethod);
 					parallel.setName(ast.newSimpleName("parallel"));
 					tfb.getFirst().setExpression(parallel);
 				}else {
-					tfb.getFirst().setExpression(replaceMethod);
+					if(mapTo!=null)tfb.getFirst().setExpression(mapTo);
+					else tfb.getFirst().setExpression(replaceMethod);
 				}
 				forEach.setExpression(tfb.getLast());
 			}else {
 				if(tfb.getFirst()!=null) {
 					if (parallelizable) {
 						MethodInvocation parallel = ast.newMethodInvocation();
-						parallel.setExpression(replaceMethod);
+						if(mapTo!=null)parallel.setExpression(mapTo);
+						else parallel.setExpression(replaceMethod);
 						parallel.setName(ast.newSimpleName("parallel"));
 						tfb.getFirst().setExpression(parallel);
 					}else {
-						tfb.getFirst().setExpression(replaceMethod);
+						if(mapTo!=null)tfb.getFirst().setExpression(mapTo);
+						else tfb.getFirst().setExpression(replaceMethod);
 					}
 					forEach.setExpression(tfb.getFirst());
 				}
 				else {
 					if (parallelizable) {
 						MethodInvocation parallel = ast.newMethodInvocation();
-						parallel.setExpression(replaceMethod);
+						if(mapTo!=null)parallel.setExpression(mapTo);
+						else parallel.setExpression(replaceMethod);
 						parallel.setName(ast.newSimpleName("parallel"));
 						forEach.setExpression(parallel);
 					}else {
-						forEach.setExpression(replaceMethod);
+						if(mapTo!=null)forEach.setExpression(mapTo);
+						else forEach.setExpression(replaceMethod);
 					}
 				}
 			}
@@ -261,6 +282,46 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 				return;
 			}
 			parameter.setType(ast.newSimpleType(finalType));
+		}
+	}
+	
+	private MethodInvocation verifParameter2(SingleVariableDeclaration parameter, AST ast) {
+		Type t = parameter.getType();
+		if (t.isPrimitiveType()) {
+			MethodInvocation mapTo = ast.newMethodInvocation();
+			PrimitiveType pT = (PrimitiveType) t;
+			switch (pT.toString()) {
+			case "int":
+				mapTo.setName(ast.newSimpleName("mapToInt"));
+				break;
+			case "char":
+				mapTo.setName(ast.newSimpleName("mapToChar"));
+				break;
+			case "boolean":
+				mapTo.setName(ast.newSimpleName("mapToBool"));
+				break;
+			case "short":
+				mapTo.setName(ast.newSimpleName("mapToShort"));
+				break;
+			case "long":
+				mapTo.setName(ast.newSimpleName("mapToLong"));
+				break;
+			case "float":
+				mapTo.setName(ast.newSimpleName("mapToFloat"));
+				break;
+			case "double":
+				mapTo.setName(ast.newSimpleName("mapToDouble"));
+				break;
+			case "byte":
+				mapTo.setName(ast.newSimpleName("mapToByte"));
+				break;
+			default:
+				return mapTo;
+			}
+			return mapTo;
+			
+		}else {
+			return null;
 		}
 	}
 

@@ -80,9 +80,9 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			
 			List<CompilationUnit> parsedCu = JavaParserHelper.parseSources(project, compilationUnits,monitor);
 			
-			PuckGraph graph = GraphBuilder.collectGraph(parsedCu);
+			//PuckGraph graph = GraphBuilder.collectGraph(parsedCu);
 			
-			AdjacencyList graphAdj = new AdjacencyList(graph.getUseGraph().getGraph());
+			//AdjacencyList graphAdj = new AdjacencyList(graph.getUseGraph().getGraph());
 			
 			
 			
