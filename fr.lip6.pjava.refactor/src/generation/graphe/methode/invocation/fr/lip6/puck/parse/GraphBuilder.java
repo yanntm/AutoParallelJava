@@ -50,26 +50,26 @@ public final class GraphBuilder  {
 				 */
 				@Override
 				public void endVisit(TypeDeclaration node) {
-					ITypeBinding itb = node.resolveBinding();
-					nodes.addType(itb);
+//					ITypeBinding itb = node.resolveBinding();
+//					nodes.addType(itb);
 					for (MethodDeclaration meth : node.getMethods()) {
 						IMethodBinding mtb = meth.resolveBinding();
-						nodes.addMethod(mtb);
+						nodes.addMethod(mtb, meth);
 					}
 
-					for (FieldDeclaration att : node.getFields()) {
-						for (Object toc : att.fragments()) {
-							VariableDeclarationFragment vdf = (VariableDeclarationFragment) toc;
-							IVariableBinding ivb = vdf.resolveBinding();
-							nodes.addAttribute(ivb);
-						}
-					}
+//					for (FieldDeclaration att : node.getFields()) {
+//						for (Object toc : att.fragments()) {
+//							VariableDeclarationFragment vdf = (VariableDeclarationFragment) toc;
+//							IVariableBinding ivb = vdf.resolveBinding();
+//							nodes.addAttribute(ivb);
+//						}
+//					}
 					super.endVisit(node);
 				}
 
 				@Override
 				public void endVisit(PackageDeclaration node) {
-					nodes.addPackage(node.resolveBinding());
+//					nodes.addPackage(node.resolveBinding());
 					super.endVisit(node);
 				}				
 			});

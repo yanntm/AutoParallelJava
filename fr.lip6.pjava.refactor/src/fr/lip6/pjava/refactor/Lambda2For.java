@@ -5,6 +5,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,7 +14,9 @@ import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
@@ -23,6 +26,8 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix.CompilationUnitRewriteOperation;
@@ -80,11 +85,15 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			
 			List<CompilationUnit> parsedCu = JavaParserHelper.parseSources(project, compilationUnits,monitor);
 			
-			//PuckGraph graph = GraphBuilder.collectGraph(parsedCu);
+			PuckGraph graph = GraphBuilder.collectGraph(parsedCu);
 			
-			//AdjacencyList graphAdj = new AdjacencyList(graph.getUseGraph().getGraph());
-			
-			
+			AdjacencyList graphAdj = new AdjacencyList(graph.getUseGraph().getGraph());
+					
+			map = new HashMap<>();
+			map.put("ReadOnly", new HashSet<>());
+			map.put("ThreadSafe", new HashSet<>());
+			map.put("ModifLocal", new HashSet<>());
+			map.put("NotParallelizable", new HashSet<>());
 			
 //			try {
 //				graph.exportDot("D:\\Users\\teill\\Documents\\test.dot");
@@ -93,69 +102,20 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 //				e.printStackTrace();
 //			}
 			
-//			Creation AST de tout le projet
-			getASTFromIJavaProjectAndVisitMethod(project);
-
+			
+			
+			for(Integer i : graphAdj) {
+				IMethodBinding bind = graph.getNodes().get(i);
+				MethodDeclaration dec =  graph.getNodes().get(bind);
+				MethodVisitor visit = new MethodVisitor(map);
+				dec.accept(visit);
+				methodDistribution(map, dec, visit);
+			}
 		}
 
 		return new RefactoringStatus();
 
 	}
-
-	private void getASTFromIJavaProjectAndVisitMethod(IJavaProject project) {
-
-		map = new HashMap<>();
-		map.put("ReadOnly", new HashSet<>());
-		map.put("ThreadSafe", new HashSet<>());
-		map.put("ModifLocal", new HashSet<>());
-		map.put("NotParallelizable", new HashSet<>());
-
-//		try {
-//			IPackageFragment[] packages = project.getPackageFragments();
-//			// quand on fiat le visitor et qu'il y a une dependances avec une methodes non visitée
-//			// on le mets dans la liste et on revisite une fois quand on a tout visité
-//			List<MethodDeclaration> methodProblem = new ArrayList<MethodDeclaration>();
-//			for (IPackageFragment mypackage : packages) {
-//				if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
-//					for (ICompilationUnit unit : mypackage.getCompilationUnits()) {
-//						// Now create the AST for the ICompilationUnits
-//						CompilationUnit parse = parse(unit);
-//						parse.accept(new ASTVisitor() {
-//							@Override
-//							public boolean visit(MethodDeclaration node) {
-//								if (node.getBody()!= null) {
-//									MethodVisitor visitor = new MethodVisitor(map);
-//									node.getBody().accept(visitor);
-//
-//									if(visitor.isProblem()) {
-//										methodProblem.add(node);
-//									}else {
-//										methodDistribution(map, node, visitor);
-//									}
-//								}
-//								return false;
-//							}
-//						});
-//					}
-//				}
-//			}
-//			int cpt = 0;
-//			for (MethodDeclaration method : methodProblem) {
-//				MethodVisitor visitor = new MethodVisitor(map);
-//				method.getBody().accept(visitor);
-//				if(visitor.isProblem()) {
-//					cpt++;
-//				}else {
-//					methodDistribution(map, method, visitor);
-//
-//				}
-//			}
-//			System.out.println("Il y a " + cpt + " problemes non resolu(s).");
-//		} catch (JavaModelException e) {
-//			e.printStackTrace();
-//		}
-	}
-
 
 	@Override
 	public RefactoringStatus checkPostConditions(IProgressMonitor monitor) throws CoreException {

@@ -62,6 +62,7 @@ public class TransformationMap extends ASTVisitor {
 			if(map==null) return false;
 			
 			if(node.getOperator().equals(Assignment.Operator.PLUS_ASSIGN)) {
+				
 				left = node.getLeftHandSide();
 				LambdaExpression lb = ast.newLambdaExpression();
 				lb.setParentheses(false);

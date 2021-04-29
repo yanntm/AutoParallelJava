@@ -2,13 +2,16 @@ package generation.graphe.methode.invocation.fr.lip6.puck.graph;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.IPackageBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 
 /**
@@ -19,34 +22,16 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
  */
 public class DependencyNodes {
 	// this holds the actual nodes, at their proper index. All nodes are here, this is the union of types+methods+attributes+ packages.
-	private List<IBinding> nodes = new ArrayList<>();
+	//private List<IBinding> nodes = new ArrayList<>();
 	// these separate lists of nodes by subtype also benefit from tighter type constraints, for refined analysis/use.
 	// they form a partition of nodes.
-	private List<IPackageBinding> packages = new ArrayList<>();
-	private List<ITypeBinding> types = new ArrayList<>();
-	private List<IMethodBinding> methods = new ArrayList<>();
-	private List<IVariableBinding> attributes = new ArrayList<> ();
-	
-	public void addType(ITypeBinding itb) {
-		nodes.add(itb);
-		types.add(itb);
-	}
+	private List<IMethodBinding> nodes = new ArrayList<>();
+	private Map<IMethodBinding, MethodDeclaration> mtb2mtd = new HashMap<IMethodBinding, MethodDeclaration>();
 
-	public void addMethod(IMethodBinding mtb) {
+	public void addMethod(IMethodBinding mtb, MethodDeclaration mtd) {
 		nodes.add(mtb);
-		methods.add(mtb);
-	}
-
-	public void addAttribute(IVariableBinding ivb) {
-		nodes.add(ivb);
-		attributes.add(ivb);
-	}
-
-	public void addPackage(IPackageBinding ipb) {
-		if (! packages.contains(ipb)) {
-			packages.add(ipb);
-			nodes.add(ipb);
-		}
+		mtb2mtd.put(mtb, mtd);
+//		methods.add(mtb);
 	}
 
 	public int size() {
@@ -152,6 +137,14 @@ public class DependencyNodes {
 			}
 			index++;
 		}		
-	}	
+	}
+	
+	public IMethodBinding get(int i) {
+		return nodes.get(i);
+	}
+	
+	public MethodDeclaration get(IMethodBinding mtb) {
+		return mtb2mtd.get(mtb);
+	}
 	
 }

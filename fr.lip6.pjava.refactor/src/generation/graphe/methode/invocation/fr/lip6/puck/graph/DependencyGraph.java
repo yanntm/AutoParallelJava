@@ -32,6 +32,7 @@ public class DependencyGraph {
 	}
 	
 	public void addEdge(int indexDst, int indexSrc, ASTNode reason) {
+		if(indexDst == -1 || indexSrc == -1) return;
 		graph.set(indexDst, indexSrc, 1);
 		reasons.computeIfAbsent(indexDst, k -> new HashMap<>()).computeIfAbsent(indexSrc, k -> new ArrayList<>()).add(reason);
 	}
