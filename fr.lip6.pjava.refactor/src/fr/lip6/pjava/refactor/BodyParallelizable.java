@@ -8,15 +8,15 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
 public class BodyParallelizable extends ASTVisitor {
-	static int problem = 0;
-	
+	private int problem = 0;
+	private boolean parallelizable=true;
 	private HashMap<String, Set<String>> methode;
 
 	public BodyParallelizable(HashMap<String, Set<String>> methode) {
 		this.methode=methode;
 	}
 
-	private boolean parallelizable;
+	
 	
 	@Override
 	public boolean visit(MethodInvocation node) {
@@ -26,7 +26,11 @@ public class BodyParallelizable extends ASTVisitor {
 			problem++;
 			System.out.println("Problemes : " + problem);
 		}else {
-			if (methode.get("NotParallelizable").contains(bind.getKey())) {
+			if ( methode.get("ReadOnly").contains(bind.getKey()) || methode.get("ThreadSafe").contains(bind.getKey()) 
+					|| methode.get("ModifLocal").contains(bind.getKey())) {
+//			if(!methode.get("NotParallelizable").contains(bind.getKey())
+//				parallelizable=false;
+			}else {
 				parallelizable=false;
 			}
 		}
@@ -37,5 +41,7 @@ public class BodyParallelizable extends ASTVisitor {
 	public boolean isParallelizable() {
 		return parallelizable;
 	}
+	
+	
 		
 }

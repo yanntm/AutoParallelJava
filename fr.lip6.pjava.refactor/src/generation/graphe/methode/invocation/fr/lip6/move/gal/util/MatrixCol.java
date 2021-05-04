@@ -170,7 +170,7 @@ public class MatrixCol {
 	}
 	
 	public void set (int row, int col, int val) {
-		System.out.println("row : " + row +" , col : " + col + " iRows : " + iRows + ", iCols : " + iCols ) ;
+//		System.out.println("row : " + row +" , col : " + col + " iRows : " + iRows + ", iCols : " + iCols ) ;
 		if (row < 0 || col < 0 || row >= iRows || col >= iCols)
 			throw new IllegalArgumentException();
 		if (val != 0) {

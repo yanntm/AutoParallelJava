@@ -39,16 +39,6 @@ public class AdjacencyList implements Iterable<Integer>{
 		return graph;
 	}
 	
-	public List<Integer> findLeaf(){
-		List<Integer> res = new ArrayList<Integer>();
-		for (int i = 0; i < graph.length; i++) {
-			if (graph[i].isEmpty()) {
-				res.add(i);
-			}
-		}
-		return res;
-	}
-	
 	public List<List<Integer>> findCycles() {
 		List<List<Integer>> res = new ArrayList<>();
 		for (int i=0; i < graph.length; i++) {
@@ -59,15 +49,19 @@ public class AdjacencyList implements Iterable<Integer>{
 	}
 
 	private List<List<Integer>> createHierarchy() {
-		Map<Integer, List<Integer>> dpsValue = new HashMap<Integer, List<Integer>>();
+		Map<Integer, List<Integer>> dfsValue = new HashMap<Integer, List<Integer>>();
+		List<List<Integer>> res = new ArrayList<List<Integer>>();
 		for (int i = 0; i < graph.length; i++) {
 			int dfsVal = DFS(i);
+			if(dfsValue.get(dfsVal)==null) dfsValue.put(dfsVal, new ArrayList<Integer>());
+			dfsValue.get(dfsVal).add(i);
 		}
-		
-		//TODO : creer la hierarchie niveau par niveau pour ensuite la parcourir en commencant par le niveau 1 élément 1
-
-		
-		return null;
+		List<Integer> valKeyMap = new ArrayList<Integer>(dfsValue.keySet());
+		Collections.sort(valKeyMap);
+		for (Integer integer : valKeyMap) {
+			res.add(dfsValue.get(integer));
+		}
+		return res;
 	}
 	
 	public void dfs(List<List<Integer>> res, int src, int current, List<Integer> stack, boolean[] visited) {
@@ -89,9 +83,7 @@ public class AdjacencyList implements Iterable<Integer>{
     int DFSUtil(int v, boolean visited[])
     {
         // Mark the current node as visited and print it
-        visited[v] = true;
-        System.out.print(v + " ");
-        
+        visited[v] = true;        
         List<Integer> res = new ArrayList<Integer>();
         
         // Recur for all the vertices adjacent to this
@@ -114,27 +106,15 @@ public class AdjacencyList implements Iterable<Integer>{
  
     // The function to do DFS traversal. It uses recursive
     // DFSUtil()
-    int DFS()
+    int DFS(int  val)
     {
         // Mark all the vertices as not visited(set as
         // false by default in java)
         boolean visited[] = new boolean[graph.length];
- 
-        List<Integer> res = new ArrayList<Integer>();
-        
+         
         // Call the recursive helper function to print DFS
         // traversal starting from all vertices one by one
-        for (int i = 0; i < graph.length; ++i) {
-        	if (visited[i] == false) {
-        		res.add(DFSUtil(i, visited));
-        	}
-                
-        }
-        try {
-        	return Collections.max(res);
-        }catch (NoSuchElementException e) {
-			return 0;
-		}
+        return DFSUtil(val, visited);
             
     }
 

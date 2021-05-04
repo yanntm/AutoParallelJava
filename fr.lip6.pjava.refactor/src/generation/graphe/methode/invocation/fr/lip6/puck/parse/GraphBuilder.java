@@ -50,20 +50,20 @@ public final class GraphBuilder  {
 				 */
 				@Override
 				public void endVisit(TypeDeclaration node) {
-//					ITypeBinding itb = node.resolveBinding();
+					ITypeBinding itb = node.resolveBinding();
 //					nodes.addType(itb);
 					for (MethodDeclaration meth : node.getMethods()) {
 						IMethodBinding mtb = meth.resolveBinding();
 						nodes.addMethod(mtb, meth);
 					}
 
-//					for (FieldDeclaration att : node.getFields()) {
-//						for (Object toc : att.fragments()) {
-//							VariableDeclarationFragment vdf = (VariableDeclarationFragment) toc;
-//							IVariableBinding ivb = vdf.resolveBinding();
+					for (FieldDeclaration att : node.getFields()) {
+						for (Object toc : att.fragments()) {
+							VariableDeclarationFragment vdf = (VariableDeclarationFragment) toc;
+							IVariableBinding ivb = vdf.resolveBinding();
 //							nodes.addAttribute(ivb);
-//						}
-//					}
+						}
+					}
 					super.endVisit(node);
 				}
 

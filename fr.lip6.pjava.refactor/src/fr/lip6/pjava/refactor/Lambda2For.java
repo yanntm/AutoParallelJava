@@ -10,23 +10,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
-import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix;
@@ -39,6 +37,7 @@ import org.eclipse.jdt.ui.cleanup.ICleanUpFix;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
+import generation.graphe.methode.invocation.fr.lip6.puck.graph.DependencyNodes;
 import generation.graphe.methode.invocation.fr.lip6.puck.graph.PuckGraph;
 import generation.graphe.methode.invocation.fr.lip6.puck.parse.GraphBuilder;
 import generation.graphe.methode.invocation.fr.lip6.puck.parse.JavaParserHelper;
@@ -83,38 +82,127 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 		if (fOptions.isEnabled("cleanup.transform_enhanced_for")) { //$NON-NLS-1$
 			fStatus= new RefactoringStatus();
 			
+//			ICompilationUnit[] files = findAllFilesProject(project);
+			
 			List<CompilationUnit> parsedCu = JavaParserHelper.parseSources(project, compilationUnits,monitor);
-			
+
 			PuckGraph graph = GraphBuilder.collectGraph(parsedCu);
+
+			exportGraph(graph);
 			
+			initialiseMap();
+
 			AdjacencyList graphAdj = new AdjacencyList(graph.getUseGraph().getGraph());
-					
-			map = new HashMap<>();
-			map.put("ReadOnly", new HashSet<>());
-			map.put("ThreadSafe", new HashSet<>());
-			map.put("ModifLocal", new HashSet<>());
-			map.put("NotParallelizable", new HashSet<>());
 			
-//			try {
-//				graph.exportDot("D:\\Users\\teill\\Documents\\test.dot");
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-			
-			
-			
+			List<List<Integer>> cycle = graphAdj.findCycles();
+			List<List<MethodDeclaration>> cycleMeth = cycleMethodDeclaration(cycle, graph.getNodes());
+
+			for (List<MethodDeclaration> list : cycleMeth) {
+				List<MethodVisitor> visitors = new ArrayList<MethodVisitor>();
+				List<Boolean> resVisitors = new ArrayList<Boolean>();
+				for (MethodDeclaration meth : list) {
+					MethodVisitor visit = new MethodVisitor(map);
+					meth.accept(visit);
+					visitors.add(visit);
+					resVisitors.add(isParallelizable(meth, visit));
+				}
+				boolean cycleParallelizable = true;
+				for (Boolean b : resVisitors) {
+					if(!b)cycleParallelizable=false;
+				}
+				if(cycleParallelizable) {
+					int i=0;
+					for (MethodVisitor visitor : visitors) {
+						methodDistribution(map, list.get(i), visitor);
+					}
+				}
+
+
+			}
+
+
 			for(Integer i : graphAdj) {
 				IMethodBinding bind = graph.getNodes().get(i);
 				MethodDeclaration dec =  graph.getNodes().get(bind);
-				MethodVisitor visit = new MethodVisitor(map);
-				dec.accept(visit);
-				methodDistribution(map, dec, visit);
+				if(!inCycle(dec,cycleMeth)) {
+					MethodVisitor visit = new MethodVisitor(map);
+					dec.accept(visit);
+					methodDistribution(map, dec, visit);
+				}
+
+
+
 			}
 		}
 
 		return new RefactoringStatus();
 
+	}
+
+//	private ICompilationUnit[] findAllFilesProject(IJavaProject project) {
+//		List<ICompilationUnit> res = new ArrayList<ICompilationUnit>();
+//		try {
+//			for(IPackageFragmentRoot pack : project.getAllPackageFragmentRoots()) {
+//				for(IJavaElement javElem : pack.getChildren()) {
+//					IResource resource = javElem.getResource();
+//					System.out.println(javElem + " type " + javElem.getElementType());
+////					try {
+////						resource.accept(new IResourceVisitor() {
+////							
+////							@Override
+////							public boolean visit(IResource resource)  {
+////								if(resource instanceof IFile) {
+////									IFile file = (IFile) resource;
+////									res.add(JavaCore.createCompilationUnitFrom(file));
+////								}
+////								return true;
+////							}
+////						});
+////					} catch (CoreException e) {
+////						// TODO Auto-generated catch block
+////						e.printStackTrace();
+////					}
+//				}
+//			}
+//		} catch (JavaModelException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		return null;
+//	}
+
+	private void exportGraph(PuckGraph graph) {
+		try {
+			graph.exportDot("D:\\Users\\teill\\Documents\\test.dot");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	private boolean inCycle(MethodDeclaration node, List<List<MethodDeclaration>> cycleMeth) {
+		for (List<MethodDeclaration> list : cycleMeth) {
+			for (MethodDeclaration methodDeclaration : list) {
+				if (methodDeclaration.resolveBinding().getKey().equals(node.resolveBinding().getKey()))return true;
+			}
+		}
+		return false;
+	}
+
+	private void initialiseMap() {
+		map = new HashMap<>();
+		map.put("ReadOnly", new HashSet<>());
+		map.put("ThreadSafe", new HashSet<>());
+		map.put("ModifLocal", new HashSet<>());
+		map.put("NotParallelizable", new HashSet<>());
+	}
+
+	private int verifCycle(Integer valMatrix, List<List<Integer>> cycle) {
+		for (int i = 0; i < cycle.size(); i++) {
+			if(cycle.get(i).contains(valMatrix))return i;
+		}
+		return -1;
 	}
 
 	@Override
@@ -172,14 +260,6 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 	}
 
 
-	private static CompilationUnit parse(ICompilationUnit unit) {
-		ASTParser parser = ASTParser.newParser(AST.JLS15);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		parser.setSource(unit);
-		parser.setResolveBindings(true);
-		return (CompilationUnit) parser.createAST(null); // parse
-	}
-
 	private void methodDistribution(Map<String, Set<String>> map, MethodDeclaration node,
 			MethodVisitor visitor) {
 		if (visitor.isReadOnly()) {
@@ -197,19 +277,31 @@ public class Lambda2For extends AbstractMultiFix implements ICleanUp {
 			map.get("NotParallelizable").add(node.resolveBinding().getKey());
 		}
 	}
-	
-	private List<ASTNode> findLeafs(PuckGraph pg){
-		return null;
+
+	private boolean isParallelizable(MethodDeclaration node,MethodVisitor visitor) {
+		if (visitor.isReadOnly()) {
+			return true;
+		}
+		else if (visitor.isThreadSafe()) {
+			return true;
+		}
+		else if (visitor.isModifLocal()) {
+			return true;
+		} else {
+			return false;
+		}
 	}
-	
-	private List<List<ASTNode>>findCycle(PuckGraph pg){
-		return null;
-	}
-	
-	private void removeElement(MethodDeclaration node, PuckGraph pg) {
-		int i = pg.findIndex(node.resolveBinding());
-		pg.getUseGraph().getGraph().deleteColumn(i);
-		pg.getUseGraph().getGraph().deleteRow(i);
-//		pg.getNodes().
+
+	private List<List<MethodDeclaration>> cycleMethodDeclaration(List<List<Integer>> cycle, DependencyNodes nodes){
+		List<List<MethodDeclaration>> res = new ArrayList<List<MethodDeclaration>>();
+		for (List<Integer> list : cycle) {
+			List<MethodDeclaration> meth = new ArrayList<MethodDeclaration>();
+			res.add(meth);
+			for (Integer i : list) {
+				meth.add(nodes.get(nodes.get(i)));
+			}
+		}
+
+		return res;
 	}
 }
