@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-
+import generation.graphe.methode.invocation.android.util.SparseIntArray;
 import generation.graphe.methode.invocation.fr.lip6.move.gal.util.MatrixCol;
 
 public class AdjacencyList implements Iterable<Integer>{
@@ -17,14 +17,13 @@ public class AdjacencyList implements Iterable<Integer>{
 	
 	@SuppressWarnings("unchecked")
 	public AdjacencyList(MatrixCol matrix) {
-		int[][] mat = matrix.explicit();
-		graph = new List[mat.length];
-		for (int i = 0; i < mat.length; i++) {
-			graph[i]= new ArrayList<Integer>();
-			for (int j = 0; j < mat[i].length; j++) {
-				if (mat[i][j] == 1) {
-					graph[i].add(j);
-				}
+		graph = new List[matrix.getColumnCount()];
+		for (int i = 0; i < matrix.getColumnCount(); i++) {
+			SparseIntArray coli = matrix.getColumn(i);
+			int colisz = coli.size();
+			graph[i] = new ArrayList<Integer>(colisz);
+			for (int j = 0; j < colisz; j++) {
+				graph[i].add(coli.keyAt(j));
 			}
 		}
 	}
