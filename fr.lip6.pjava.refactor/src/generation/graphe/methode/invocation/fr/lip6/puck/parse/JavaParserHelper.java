@@ -40,7 +40,7 @@ public class JavaParserHelper {
 	public static List<CompilationUnit> parseSources(IJavaProject project, ICompilationUnit[] compilationUnits, IProgressMonitor monitor) {
 		
 		// Java 8 setting by default, but this setting is overruled by setProject below so irrelevant anyway.
-		ASTParser parser = ASTParser.newParser(AST.JLS15);
+		ASTParser parser = ASTParser.newParser(AST.JLS11);
 		// parse java files
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		// Important non default setting : resolve name/type bindings for us ! yes, please, thanks !
@@ -57,40 +57,6 @@ public class JavaParserHelper {
 			}
 		}, monitor);
 		return parsedCu;
-	}
-
-	/**
-	 * Scan a Java project looking for Puck rule definition files.
-	 * If any are found, callback.
-	 * @param project
-	 * @param graph
-	 * @throws JavaModelException
-	 * @throws CoreException
-	 */
-	public static void findRuleFiles(IJavaProject project, Function<IFile,Void> todo) throws JavaModelException, CoreException {
-		for (IPackageFragmentRoot fragment : project.getAllPackageFragmentRoots()) {
-			if (fragment.getKind() == IPackageFragmentRoot.K_SOURCE) {
-				IResource res = fragment.getCorrespondingResource();
-				if (res instanceof IFolder) {
-					IFolder folder = (IFolder) res;
-					folder.accept(new IResourceProxyVisitor() {						
-						@Override
-						public boolean visit(IResourceProxy proxy) throws CoreException {
-							if (proxy.getType() == IResource.FOLDER) {
-								return true;
-							} else if (proxy.getType() == IResource.FILE) {
-								if (proxy.getName().endsWith(".wld")) {
-									IResource member = proxy.requestResource();
-									todo.apply((IFile) member);
-								}
-							}
-							return false;
-						}
-	
-					}, IResource.DEPTH_INFINITE);
-				}
-			}
-		}
 	}
 
 }
