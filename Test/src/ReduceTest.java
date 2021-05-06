@@ -12,16 +12,14 @@ public class ReduceTest {
         for (Integer integer : temp) {
             temp.remove(integer);
         }
-//        ||
-//        <>
+        
         temp.stream().forEach((Integer i)->  temp.remove(i)); //Solution voulue
         
         
         for (int integer : temp) {
             temp.remove(integer);
         }
-//        ||
-//        <>
+        
         temp.stream().mapToInt((Integer i)-> i).forEach((int i) ->  temp.remove(i)); //Solution voulue
 
 
@@ -31,7 +29,6 @@ public class ReduceTest {
 
         for (Integer integer : temp) {
             somme+=Math.PI;
-
         }
 
         for (Integer integer : temp) {

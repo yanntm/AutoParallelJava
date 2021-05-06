@@ -16,7 +16,7 @@ import org.eclipse.swt.widgets.Composite;
  * @author Teillet & Capitanio
  *
  */
-public class Lambda2ForCleanUpPage implements ICleanUpConfigurationUI {
+public class For2LambdaCleanUpPage implements ICleanUpConfigurationUI {
 	/**
 	 *  Options of the environment
 	 */

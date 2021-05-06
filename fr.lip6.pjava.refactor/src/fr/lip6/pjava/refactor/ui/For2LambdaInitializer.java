@@ -9,7 +9,7 @@ import org.eclipse.jdt.ui.cleanup.ICleanUpOptionsInitializer;
  * @author Teillet & Capitanio
  *
  */
-public class Lambda2ForInitializer implements ICleanUpOptionsInitializer  {
+public class For2LambdaInitializer implements ICleanUpOptionsInitializer  {
 	
 	
 	@Override

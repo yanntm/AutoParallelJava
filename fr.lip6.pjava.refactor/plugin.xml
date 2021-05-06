@@ -7,17 +7,17 @@
          name="fr.lip6.pjava.refactor.lambda2for"
          point="org.eclipse.jdt.ui.cleanUps">
       <cleanUp
-            class="fr.lip6.pjava.refactor.Lambda2For"
+            class="fr.lip6.pjava.refactor.For2Lambda"
             id="fr.lip6.pjava.refactor.cleanUp1">
       </cleanUp>
       
       <cleanUpOptionsInitializer
-            class="fr.lip6.pjava.refactor.ui.Lambda2ForInitializer"
+            class="fr.lip6.pjava.refactor.ui.For2LambdaInitializer"
             cleanUpKind="cleanUp">
       </cleanUpOptionsInitializer>
       
       <cleanUpConfigurationUI
-            class="fr.lip6.pjava.refactor.ui.Lambda2ForCleanUpPage"
+            class="fr.lip6.pjava.refactor.ui.For2LambdaCleanUpPage"
             name="Transform Enhanced For"
             cleanUpKind="cleanUp">
       </cleanUpConfigurationUI>

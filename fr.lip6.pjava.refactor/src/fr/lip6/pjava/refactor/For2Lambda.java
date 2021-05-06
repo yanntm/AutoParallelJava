@@ -49,7 +49,7 @@ import generation.graphe.methode.invocation.structure.AdjacencyList;
  *
  */
 @SuppressWarnings("restriction")
-public class Lambda2For extends AbstractMultiFix implements ICleanUp {	 
+public class For2Lambda extends AbstractMultiFix implements ICleanUp {	 
 	private CleanUpOptions fOptions;
 	private RefactoringStatus fStatus;
 	private HashMap<String, Set<String>> map;
