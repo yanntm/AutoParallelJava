@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 package generation.graphe.methode.invocation.android.util;
-import generation.graphe.methode.invocation.com.android.internal.util.ArrayUtils;
-import generation.graphe.methode.invocation.com.android.internal.util.GrowingArrayUtils;
-import generation.graphe.methode.invocation.libcore.util.EmptyArray;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import generation.graphe.methode.invocation.com.android.internal.util.ArrayUtils;
+import generation.graphe.methode.invocation.com.android.internal.util.GrowingArrayUtils;
+import generation.graphe.methode.invocation.libcore.util.EmptyArray;
 /**
  * SparseIntArrays map integers to integers.  Unlike a normal array of integers,
  * there can be gaps in the indices.  It is intended to be more memory efficient
@@ -81,21 +81,31 @@ public class SparseBoolArray implements Cloneable {
     	}    	
 	}
     
-    public List<Boolean> toList (int size) {
-    	List<Boolean> res = new ArrayList<> (size);
-    	int  j = 0;
-    	for (int i=0; i < size ; i++ ) {
-    		if (j < size() && keyAt(j)==i) {
-    			res.add(true);
-    			++j;
-    		} else {
-    			res.add(false);
-    		}    		
-    	}
-    	return res;
+    /**
+     * Puts a key/value pair into the array, optimizing for the case where
+     * the key is greater than all existing keys in the array.
+     */
+    public void append(int key, boolean v) {
+    	if (! v)
+    		return;
+        if (mSize != 0 && key <= mKeys[mSize - 1]) {
+            put(key, v);
+            return;
+        }
+        mKeys = GrowingArrayUtils.append(mKeys, mSize, key);
+        mSize++;
     }
     
-	@Override
+	/**
+     * Removes all key-value mappings from this SparseIntArray.
+     */
+    public void clear() {
+        mSize = 0;
+    }
+    public void clear(int j) {
+		put (j,false);
+	}
+    @Override
     public SparseBoolArray clone() {
         SparseBoolArray clone = null;
         try {
@@ -106,6 +116,69 @@ public class SparseBoolArray implements Cloneable {
         }
         return clone;
     }
+    /**
+     * Provides a copy of keys.
+     *
+     * @hide
+     * */
+    public int[] copyKeys() {
+        if (size() == 0) {
+            return null;
+        }
+        return Arrays.copyOf(mKeys, size());
+    }
+    /**
+     * Removes the mapping from the specified key, if there was any.
+     */
+    public void delete(int key) {
+        int i = ContainerHelpers.binarySearch(mKeys, mSize, key);
+        if (i >= 0) {
+            removeAt(i);
+        }
+    }
+    /**
+     * Delete an element at index and shift elements to the right by one.
+     * @param i
+     */
+	public void deleteAndShift(int i) {
+		if (mSize==0 || i > mKeys[mSize-1]) {
+			return;
+		}
+		int k;
+		for (k= mSize-1 ; k>=0 && mKeys[k]>i ; k--) {
+			mKeys[k]--;			
+		}
+		if (k >= 0 && mKeys[k]==i) {
+			removeAt(k);
+		}
+	}
+    @Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof SparseBoolArray))
+			return false;
+		SparseBoolArray other = (SparseBoolArray) obj;		
+		if (mSize != other.mSize)
+			return false;
+
+		if (!equalsRange(mKeys,other.mKeys,mSize))
+			return false;
+		return true;
+	}
+    private boolean equalsRange(int[] a, int[] b, int s) {
+		if (a==b) {
+			return true;
+		}
+		for (int i=0; i< s; i++) {
+			if (a[i] != b[i])
+				return false;
+		}
+		return true;
+	}
+
     /**
      * Gets the int mapped from the specified key, or <code>0</code>
      * if no such mapping has been made.
@@ -125,22 +198,37 @@ public class SparseBoolArray implements Cloneable {
             return true;
         }
     }
+    @Override
+	public int hashCode() {
+		final int prime = 1409;
+		int result = 1;
+		result = prime * result + ContainerHelpers.hashCode(mKeys,mSize);
+		result = prime * result + mSize;
+		return result;
+	}
     /**
-     * Removes the mapping from the specified key, if there was any.
+     * Returns the index for which {@link #keyAt} would return the
+     * specified key, or a negative number if the specified
+     * key is not mapped.
      */
-    public void delete(int key) {
-        int i = ContainerHelpers.binarySearch(mKeys, mSize, key);
-        if (i >= 0) {
-            removeAt(i);
-        }
+    public int indexOfKey(int key) {
+        return ContainerHelpers.binarySearch(mKeys, mSize, key);
     }
     /**
-     * Removes the mapping at the given index.
+     * Given an index in the range <code>0...size()-1</code>, returns
+     * the key from the <code>index</code>th key-value mapping that this
+     * SparseIntArray stores.
+     *
+     * <p>The keys corresponding to indices in ascending order are guaranteed to
+     * be in ascending order, e.g., <code>keyAt(0)</code> will return the
+     * smallest key and <code>keyAt(size()-1)</code> will return the largest
+     * key.</p>
      */
-    public void removeAt(int index) {
-        System.arraycopy(mKeys, index + 1, mKeys, index, mSize - (index + 1));        
-        mSize--;
+    public int keyAt(int index) {
+        return mKeys[index];
     }
+
+    
     /**
      * Adds a mapping from the specified key to the specified value,
      * replacing the previous mapping from the specified key if there
@@ -160,67 +248,7 @@ public class SparseBoolArray implements Cloneable {
             mSize++;
         }
     }
-    /**
-     * Returns the number of key-value mappings that this SparseIntArray
-     * currently stores.
-     */
-    public int size() {
-        return mSize;
-    }
-    /**
-     * Given an index in the range <code>0...size()-1</code>, returns
-     * the key from the <code>index</code>th key-value mapping that this
-     * SparseIntArray stores.
-     *
-     * <p>The keys corresponding to indices in ascending order are guaranteed to
-     * be in ascending order, e.g., <code>keyAt(0)</code> will return the
-     * smallest key and <code>keyAt(size()-1)</code> will return the largest
-     * key.</p>
-     */
-    public int keyAt(int index) {
-        return mKeys[index];
-    }
-
-    /**
-     * Returns the index for which {@link #keyAt} would return the
-     * specified key, or a negative number if the specified
-     * key is not mapped.
-     */
-    public int indexOfKey(int key) {
-        return ContainerHelpers.binarySearch(mKeys, mSize, key);
-    }
-    /**
-     * Removes all key-value mappings from this SparseIntArray.
-     */
-    public void clear() {
-        mSize = 0;
-    }
-    /**
-     * Puts a key/value pair into the array, optimizing for the case where
-     * the key is greater than all existing keys in the array.
-     */
-    public void append(int key, boolean v) {
-    	if (! v)
-    		return;
-        if (mSize != 0 && key <= mKeys[mSize - 1]) {
-            put(key, v);
-            return;
-        }
-        mKeys = GrowingArrayUtils.append(mKeys, mSize, key);
-        mSize++;
-    }
-    /**
-     * Provides a copy of keys.
-     *
-     * @hide
-     * */
-    public int[] copyKeys() {
-        if (size() == 0) {
-            return null;
-        }
-        return Arrays.copyOf(mKeys, size());
-    }
-    /**
+	/**
      * Provides direct access to keys, client should not modify.
      * As side effect, trims the representation array if it's overlarge.
      * @return an array of sorted integers corresponding to true entries of this BoolArray
@@ -234,43 +262,39 @@ public class SparseBoolArray implements Cloneable {
         }
         return mKeys;
 	}
-
-    
-    @Override
-	public int hashCode() {
-		final int prime = 1409;
-		int result = 1;
-		result = prime * result + ContainerHelpers.hashCode(mKeys,mSize);
-		result = prime * result + mSize;
-		return result;
-	}
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (!(obj instanceof SparseBoolArray))
-			return false;
-		SparseBoolArray other = (SparseBoolArray) obj;		
-		if (mSize != other.mSize)
-			return false;
-
-		if (!equalsRange(mKeys,other.mKeys,mSize))
-			return false;
-		return true;
-	}
-	private boolean equalsRange(int[] a, int[] b, int s) {
-		if (a==b) {
-			return true;
-		}
-		for (int i=0; i< s; i++) {
-			if (a[i] != b[i])
-				return false;
-		}
-		return true;
-	}
 	/**
+     * Removes the mapping at the given index.
+     */
+    public void removeAt(int index) {
+        System.arraycopy(mKeys, index + 1, mKeys, index, mSize - (index + 1));        
+        mSize--;
+    }
+	public void set(int j) {
+		put (j,true);
+	}
+    
+	/**
+     * Returns the number of key-value mappings that this SparseIntArray
+     * currently stores.
+     */
+    public int size() {
+        return mSize;
+    }
+	public List<Boolean> toList (int size) {
+    	List<Boolean> res = new ArrayList<> (size);
+    	int  j = 0;
+    	for (int i=0; i < size ; i++ ) {
+    		if (j < size() && keyAt(j)==i) {
+    			res.add(true);
+    			++j;
+    		} else {
+    			res.add(false);
+    		}    		
+    	}
+    	return res;
+    }
+	
+	 /**
      * {@inheritDoc}
      *
      * <p>This implementation composes a string by iterating over its mappings.
@@ -292,29 +316,5 @@ public class SparseBoolArray implements Cloneable {
         buffer.append('}');
         return buffer.toString();
     }
-    
-	public void clear(int j) {
-		put (j,false);
-	}
-	public void set(int j) {
-		put (j,true);
-	}
-	
-	 /**
-     * Delete an element at index and shift elements to the right by one.
-     * @param i
-     */
-	public void deleteAndShift(int i) {
-		if (mSize==0 || i > mKeys[mSize-1]) {
-			return;
-		}
-		int k;
-		for (k= mSize-1 ; k>=0 && mKeys[k]>i ; k--) {
-			mKeys[k]--;			
-		}
-		if (k >= 0 && mKeys[k]==i) {
-			removeAt(k);
-		}
-	}
 	
 }

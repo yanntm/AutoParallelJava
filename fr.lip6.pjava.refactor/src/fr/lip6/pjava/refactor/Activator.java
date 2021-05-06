@@ -8,12 +8,21 @@ import org.osgi.framework.BundleContext;
  */
 public class Activator extends AbstractUIPlugin {
 
-	// The plug-in ID
-	public static final String PLUGIN_ID = "fr.lip6.pjava.refactor"; //$NON-NLS-1$
-
 	// The shared instance
 	private static Activator plugin;
+
+	// The plug-in ID
+	public static final String PLUGIN_ID = "fr.lip6.pjava.refactor"; //$NON-NLS-1$
 	
+	/**
+	 * Returns the shared instance
+	 *
+	 * @return the shared instance
+	 */
+	public static Activator getDefault() {
+		return plugin;
+	}
+
 	/**
 	 * The constructor
 	 */
@@ -30,15 +39,6 @@ public class Activator extends AbstractUIPlugin {
 	public void stop(BundleContext context) throws Exception {
 		plugin = null;
 		super.stop(context);
-	}
-
-	/**
-	 * Returns the shared instance
-	 *
-	 * @return the shared instance
-	 */
-	public static Activator getDefault() {
-		return plugin;
 	}
 
 }

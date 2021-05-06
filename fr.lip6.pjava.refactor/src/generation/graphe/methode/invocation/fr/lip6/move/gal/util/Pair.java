@@ -33,7 +33,34 @@ import java.util.Objects;
  * @param <Y> class of the second element
  */
 public class Pair<X, Y> {
+	public static <X, Y> Pair<List<X>, List<Y>> unzip(Iterable<Pair<X, Y>> iterable) {
+		List<X> ret1 = new ArrayList<>();
+		List<Y> ret2 = new ArrayList<>();
+		for (Pair<X, Y> ele : iterable) {
+			ret1.add(ele.getFirst());
+			ret2.add(ele.getSecond());
+		}
+
+		return new Pair<>(ret1, ret2);
+	}
+	public static <X, Y> List<Pair<X, Y>> zip(Collection<X> col1, Collection<Y> col2) {
+		if (col1.size() != col2.size())
+			throw new IllegalArgumentException("Collection need equal sizes");
+
+		List<Pair<X, Y>> ret = new ArrayList<>();
+		Iterator<Y> it = col2.iterator();
+		for (X ele1 : col1) {
+			assert it.hasNext();
+			Y ele2 = it.next();
+
+			ret.add(new Pair<>(ele1, ele2));
+		}
+
+		return ret;
+	}
+
 	private final X q1;
+
 	private final Y q2;
 
 	/**
@@ -44,6 +71,18 @@ public class Pair<X, Y> {
 	public Pair(X q1, Y q2) {
 		this.q1 = q1;
 		this.q2 = q2;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other == null || !(other instanceof Pair)) {
+			return false;
+		}
+		if (other == this) {
+			return true;
+		}
+		Pair<?, ?> otherPair = (Pair<?, ?>) other;
+		return Objects.equals(this.q1, otherPair.q1) && Objects.equals(this.q2, otherPair.q2);
 	}
 
 	/**
@@ -63,51 +102,12 @@ public class Pair<X, Y> {
 	}
 
 	@Override
-	public String toString() {
-		return "(" + q1 + "," + q2 + ")";
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		if (other == null || !(other instanceof Pair)) {
-			return false;
-		}
-		if (other == this) {
-			return true;
-		}
-		Pair<?, ?> otherPair = (Pair<?, ?>) other;
-		return Objects.equals(this.q1, otherPair.q1) && Objects.equals(this.q2, otherPair.q2);
-	}
-
-	@Override
 	public int hashCode() {
 		return Objects.hash(this.q1, this.q2);
 	}
 
-	public static <X, Y> List<Pair<X, Y>> zip(Collection<X> col1, Collection<Y> col2) {
-		if (col1.size() != col2.size())
-			throw new IllegalArgumentException("Collection need equal sizes");
-
-		List<Pair<X, Y>> ret = new ArrayList<>();
-		Iterator<Y> it = col2.iterator();
-		for (X ele1 : col1) {
-			assert it.hasNext();
-			Y ele2 = it.next();
-
-			ret.add(new Pair<>(ele1, ele2));
-		}
-
-		return ret;
-	}
-
-	public static <X, Y> Pair<List<X>, List<Y>> unzip(Iterable<Pair<X, Y>> iterable) {
-		List<X> ret1 = new ArrayList<>();
-		List<Y> ret2 = new ArrayList<>();
-		for (Pair<X, Y> ele : iterable) {
-			ret1.add(ele.getFirst());
-			ret2.add(ele.getSecond());
-		}
-
-		return new Pair<>(ret1, ret2);
+	@Override
+	public String toString() {
+		return "(" + q1 + "," + q2 + ")";
 	}
 }

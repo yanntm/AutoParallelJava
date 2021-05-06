@@ -8,9 +8,9 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
 public class BodyParallelizable extends ASTVisitor {
-	private int problem = 0;
-	private boolean parallelizable=true;
 	private HashMap<String, Set<String>> methode;
+	private boolean parallelizable=true;
+	private int problem = 0;
 
 	public BodyParallelizable(HashMap<String, Set<String>> methode) {
 		this.methode=methode;
@@ -18,6 +18,10 @@ public class BodyParallelizable extends ASTVisitor {
 
 	
 	
+	public boolean isParallelizable() {
+		return parallelizable;
+	}
+
 	@Override
 	public boolean visit(MethodInvocation node) {
 		//System.out.println(node);
@@ -36,10 +40,6 @@ public class BodyParallelizable extends ASTVisitor {
 		}
 
 		return super.visit(node);
-	}
-
-	public boolean isParallelizable() {
-		return parallelizable;
 	}
 	
 	

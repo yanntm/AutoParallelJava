@@ -16,27 +16,27 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
  */
 public class TraitementForBody extends ASTVisitor {
 	/**
-	 * The parent that called the transformation
-	 */
-	private ASTNode parent;
-	/**
 	 * The AST in which the transformation is done
 	 */
 	private AST ast;
 	/**
-	 * Use if their is multiple filter that chain
+	 * the body of the last if
 	 */
-	private MethodInvocation last=null;
+	private ASTNode body = null;
+	private boolean filterPossible = true;
 	/**
 	 * Use for the first filter
 	 */
 	private MethodInvocation first=null;
 	/**
-	 * the body of the last if
+	 * Use if their is multiple filter that chain
 	 */
-	private ASTNode body = null;
+	private MethodInvocation last=null;
 	
-	private boolean filterPossible = true;
+	/**
+	 * The parent that called the transformation
+	 */
+	private ASTNode parent;
 	/**
 	 * The constructor used to initialize all the attributes
 	 * @param parent the parent who call the operation
@@ -47,6 +47,36 @@ public class TraitementForBody extends ASTVisitor {
 		this.ast = ast;
 	}
 	
+	/**
+	 * Return the body of the last if
+	 * @return the body of the last if
+	 */
+	public ASTNode getBody() {
+		return body;
+	}
+	
+	/**
+	 * The first filter
+	 * @return the first filter, none if there are no filter
+	 */
+	public MethodInvocation getFirst() {
+		return first;
+	}
+	
+	/**
+	 * Return the last filter
+	 * @return the last filter, none if there are only a filter
+	 */
+	public MethodInvocation getLast() {
+		return last;
+	}
+	
+	@Override
+	public String toString() {
+		return "TraitementForBody [parent=" + parent + ", ast=" + ast + ", last=" + last + ", first=" + first
+				+ ", body=" + body + ", filterPossible=" + filterPossible + "]";
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean visit(IfStatement node) {
@@ -88,36 +118,6 @@ public class TraitementForBody extends ASTVisitor {
 			filterPossible=false;
 		}
 		return true;
-	}
-	
-	/**
-	 * Return the last filter
-	 * @return the last filter, none if there are only a filter
-	 */
-	public MethodInvocation getLast() {
-		return last;
-	}
-	
-	/**
-	 * The first filter
-	 * @return the first filter, none if there are no filter
-	 */
-	public MethodInvocation getFirst() {
-		return first;
-	}
-	
-	/**
-	 * Return the body of the last if
-	 * @return the body of the last if
-	 */
-	public ASTNode getBody() {
-		return body;
-	}
-
-	@Override
-	public String toString() {
-		return "TraitementForBody [parent=" + parent + ", ast=" + ast + ", last=" + last + ", first=" + first
-				+ ", body=" + body + ", filterPossible=" + filterPossible + "]";
 	}
 	
 	

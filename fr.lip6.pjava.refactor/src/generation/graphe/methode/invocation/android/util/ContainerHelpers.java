@@ -16,37 +16,13 @@
 package generation.graphe.methode.invocation.android.util;
 class ContainerHelpers {
     
-	/** based of Arrays.hashCode, but with the length.*/
-	public static int hashCode(int a[], int sz) {
-		if (a == null)
-			return 0;
-
-		int result = 1;
-		for (int i=0; i < sz && i < a.length ; i++)
-			result = 31 * result + a[i];
-
-		return result;
-	}
-	
-	public static int hashCode(int a[], int b[], int sz) {
-		if (a == null || b==null)
-			return 0;
-
-		int result = 1;
-		for (int i=0; i < sz && i < a.length ; i++) {
-			result = 31 * result + a[i];
-			result = 31 * result + b[i];
-		}
-			
-		return result;
-	}
-	
 	static int binarySearch(int[] array, int size, int value) {
 		int lo = 0;
         int hi = size - 1;
         
 		return binarySearch(array, value, lo, hi); 
 	}
+	
 	// This is Arrays.binarySearch(), but doesn't do any argument validation.
     static int binarySearch(int[] array, int value, int lo, int hi) {
         while (lo <= hi) {
@@ -62,7 +38,8 @@ class ContainerHelpers {
         }
         return ~lo;  // value not present
     }
-    static int binarySearch(long[] array, int size, long value) {
+	
+	static int binarySearch(long[] array, int size, long value) {
         int lo = 0;
         int hi = size - 1;
         while (lo <= hi) {
@@ -78,4 +55,27 @@ class ContainerHelpers {
         }
         return ~lo;  // value not present
     }
+	/** based of Arrays.hashCode, but with the length.*/
+	public static int hashCode(int a[], int sz) {
+		if (a == null)
+			return 0;
+
+		int result = 1;
+		for (int i=0; i < sz && i < a.length ; i++)
+			result = 31 * result + a[i];
+
+		return result;
+	}
+    public static int hashCode(int a[], int b[], int sz) {
+		if (a == null || b==null)
+			return 0;
+
+		int result = 1;
+		for (int i=0; i < sz && i < a.length ; i++) {
+			result = 31 * result + a[i];
+			result = 31 * result + b[i];
+		}
+			
+		return result;
+	}
 }

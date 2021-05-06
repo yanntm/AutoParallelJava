@@ -5,23 +5,15 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
@@ -57,23 +49,21 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 
 
 	@Override
-	public String[] getStepDescriptions() {
-		if(fOptions.isEnabled("cleanup.transform_enhanced_for")) {
-			return new String[] {"Transform Enhanced For to Stream"};
+	public boolean canFix(ICompilationUnit compilationUnit, IProblemLocation problem) {
+		return fOptions.isEnabled("cleanup.transform_enhanced_for");
+	}
+
+	@Override
+	public RefactoringStatus checkPostConditions(IProgressMonitor monitor) throws CoreException {
+		try {
+			if (fStatus == null || fStatus.isOK()) {
+				return new RefactoringStatus();
+			} else {
+				return fStatus;
+			}
+		} finally {
+			fStatus= null;
 		}
-		return null;
-	}
-
-	@Override
-	public CleanUpRequirements getRequirements() {
-		return new CleanUpRequirements(true, true, false, null);   
-	}
-
-	@Override
-	public void setOptions(CleanUpOptions options) {
-		Assert.isLegal(options != null);
-		Assert.isTrue(fOptions == null);
-		fOptions= options;  
 	}
 
 	@Override
@@ -116,10 +106,7 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 						methodDistribution(map, list.get(i), visitor);
 					}
 				}
-
-
 			}
-
 
 			for(Integer i : graphAdj) {
 				IMethodBinding bind = graph.getNodes().get(i);
@@ -129,98 +116,11 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 					dec.accept(visit);
 					methodDistribution(map, dec, visit);
 				}
-
-
-
 			}
 		}
 
 		return new RefactoringStatus();
 
-	}
-
-//	private ICompilationUnit[] findAllFilesProject(IJavaProject project) {
-//		List<ICompilationUnit> res = new ArrayList<ICompilationUnit>();
-//		try {
-//			for(IPackageFragmentRoot pack : project.getAllPackageFragmentRoots()) {
-//				for(IJavaElement javElem : pack.getChildren()) {
-//					IResource resource = javElem.getResource();
-//					System.out.println(javElem + " type " + javElem.getElementType());
-////					try {
-////						resource.accept(new IResourceVisitor() {
-////							
-////							@Override
-////							public boolean visit(IResource resource)  {
-////								if(resource instanceof IFile) {
-////									IFile file = (IFile) resource;
-////									res.add(JavaCore.createCompilationUnitFrom(file));
-////								}
-////								return true;
-////							}
-////						});
-////					} catch (CoreException e) {
-////						// TODO Auto-generated catch block
-////						e.printStackTrace();
-////					}
-//				}
-//			}
-//		} catch (JavaModelException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		return null;
-//	}
-
-	private void exportGraph(PuckGraph graph) {
-		try {
-			graph.exportDot("D:\\Users\\teill\\Documents\\test.dot");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
-
-	private boolean inCycle(MethodDeclaration node, List<List<MethodDeclaration>> cycleMeth) {
-		for (List<MethodDeclaration> list : cycleMeth) {
-			for (MethodDeclaration methodDeclaration : list) {
-				if (methodDeclaration.resolveBinding().getKey().equals(node.resolveBinding().getKey()))return true;
-			}
-		}
-		return false;
-	}
-
-	private void initialiseMap() {
-		map = new HashMap<>();
-		map.put("ReadOnly", new HashSet<>());
-		map.put("ThreadSafe", new HashSet<>());
-		map.put("ModifLocal", new HashSet<>());
-		map.put("NotParallelizable", new HashSet<>());
-	}
-
-	private int verifCycle(Integer valMatrix, List<List<Integer>> cycle) {
-		for (int i = 0; i < cycle.size(); i++) {
-			if(cycle.get(i).contains(valMatrix))return i;
-		}
-		return -1;
-	}
-
-	@Override
-	public RefactoringStatus checkPostConditions(IProgressMonitor monitor) throws CoreException {
-		try {
-			if (fStatus == null || fStatus.isOK()) {
-				return new RefactoringStatus();
-			} else {
-				return fStatus;
-			}
-		} finally {
-			fStatus= null;
-		}
-	}
-
-	@Override
-	public boolean canFix(ICompilationUnit compilationUnit, IProblemLocation problem) {
-		return fOptions.isEnabled("cleanup.transform_enhanced_for");
 	}
 
 	@Override
@@ -245,7 +145,6 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 				}
 				return false;
 			}
-
 		});
 
 
@@ -259,6 +158,71 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 		return null;
 	}
 
+	private List<List<MethodDeclaration>> cycleMethodDeclaration(List<List<Integer>> cycle, DependencyNodes nodes){
+		List<List<MethodDeclaration>> res = new ArrayList<List<MethodDeclaration>>();
+		for (List<Integer> list : cycle) {
+			List<MethodDeclaration> meth = new ArrayList<MethodDeclaration>();
+			res.add(meth);
+			for (Integer i : list) {
+				meth.add(nodes.get(nodes.get(i)));
+			}
+		}
+		return res;
+	}
+
+	private void exportGraph(PuckGraph graph) {
+		try {
+			graph.exportDot("D:\\Users\\teill\\Documents\\test.dot");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	@Override
+	public CleanUpRequirements getRequirements() {
+		return new CleanUpRequirements(true, true, false, null);   
+	}
+
+	@Override
+	public String[] getStepDescriptions() {
+		if(fOptions.isEnabled("cleanup.transform_enhanced_for")) {
+			return new String[] {"Transform Enhanced For to Stream"};
+		}
+		return null;
+	}
+
+	private boolean inCycle(MethodDeclaration node, List<List<MethodDeclaration>> cycleMeth) {
+		for (List<MethodDeclaration> list : cycleMeth) {
+			for (MethodDeclaration methodDeclaration : list) {
+				if (methodDeclaration.resolveBinding().getKey().equals(node.resolveBinding().getKey()))return true;
+			}
+		}
+		return false;
+	}
+
+	private void initialiseMap() {
+		map = new HashMap<>();
+		map.put("ReadOnly", new HashSet<>());
+		map.put("ThreadSafe", new HashSet<>());
+		map.put("ModifLocal", new HashSet<>());
+		map.put("NotParallelizable", new HashSet<>());
+	}
+
+	private boolean isParallelizable(MethodDeclaration node,MethodVisitor visitor) {
+		if (visitor.isReadOnly()) {
+			return true;
+		}
+		else if (visitor.isThreadSafe()) {
+			return true;
+		}
+		else if (visitor.isModifLocal()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 	private void methodDistribution(Map<String, Set<String>> map, MethodDeclaration node,
 			MethodVisitor visitor) {
@@ -278,30 +242,11 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 		}
 	}
 
-	private boolean isParallelizable(MethodDeclaration node,MethodVisitor visitor) {
-		if (visitor.isReadOnly()) {
-			return true;
-		}
-		else if (visitor.isThreadSafe()) {
-			return true;
-		}
-		else if (visitor.isModifLocal()) {
-			return true;
-		} else {
-			return false;
-		}
+	@Override
+	public void setOptions(CleanUpOptions options) {
+		Assert.isLegal(options != null);
+		Assert.isTrue(fOptions == null);
+		fOptions= options;  
 	}
-
-	private List<List<MethodDeclaration>> cycleMethodDeclaration(List<List<Integer>> cycle, DependencyNodes nodes){
-		List<List<MethodDeclaration>> res = new ArrayList<List<MethodDeclaration>>();
-		for (List<Integer> list : cycle) {
-			List<MethodDeclaration> meth = new ArrayList<MethodDeclaration>();
-			res.add(meth);
-			for (Integer i : list) {
-				meth.add(nodes.get(nodes.get(i)));
-			}
-		}
-
-		return res;
-	}
+	
 }

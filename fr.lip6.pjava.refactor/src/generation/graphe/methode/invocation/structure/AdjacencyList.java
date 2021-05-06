@@ -13,8 +13,37 @@ import generation.graphe.methode.invocation.fr.lip6.move.gal.util.MatrixCol;
 
 public class AdjacencyList implements Iterable<Integer>{
 	
+	private class IteratorGraph implements Iterator<Integer>{
+		List<List<Integer>> hierarchy;	
+		private int i=0;
+		private int j=0;
+		
+		public IteratorGraph() {
+			hierarchy=createHierarchy();
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return i<hierarchy.size() && j<hierarchy.get(i).size();
+		}
+
+		@Override
+		public Integer next() {
+			Integer res = hierarchy.get(i).get(j);
+			j++;
+			if(j==hierarchy.get(i).size()) {
+				j=0;
+				i++;
+			}
+			return res;
+		}
+		
+	}
+	
 	private List<Integer>[] graph;
 	
+
+
 	@SuppressWarnings("unchecked")
 	public AdjacencyList(MatrixCol matrix) {
 		graph = new List[matrix.getColumnCount()];
@@ -28,25 +57,6 @@ public class AdjacencyList implements Iterable<Integer>{
 		}
 	}
 	
-
-
-	public int size() {
-		return graph.length;
-	}
-	
-	public List<Integer>[] getGraph() {
-		return graph;
-	}
-	
-	public List<List<Integer>> findCycles() {
-		List<List<Integer>> res = new ArrayList<>();
-		for (int i=0; i < graph.length; i++) {
-			dfs(res, i, i, new ArrayList<Integer>(), new boolean[graph.length] );
-			
-		}
-		return res;
-	}
-
 	private List<List<Integer>> createHierarchy() {
 		Map<Integer, List<Integer>> dfsValue = new HashMap<Integer, List<Integer>>();
 		List<List<Integer>> res = new ArrayList<List<Integer>>();
@@ -76,9 +86,22 @@ public class AdjacencyList implements Iterable<Integer>{
 		stack.remove(stack.size()-1);
 		
 	}
-	
 
-    // A function used by DFS
+	// The function to do DFS traversal. It uses recursive
+    // DFSUtil()
+    int DFS(int  val)
+    {
+        // Mark all the vertices as not visited(set as
+        // false by default in java)
+        boolean visited[] = new boolean[graph.length];
+         
+        // Call the recursive helper function to print DFS
+        // traversal starting from all vertices one by one
+        return DFSUtil(val, visited);
+            
+    }
+	
+	// A function used by DFS
     int DFSUtil(int v, boolean visited[])
     {
         // Mark the current node as visited and print it
@@ -102,20 +125,20 @@ public class AdjacencyList implements Iterable<Integer>{
 		}
         
     }
+	
+
+    public List<List<Integer>> findCycles() {
+		List<List<Integer>> res = new ArrayList<>();
+		for (int i=0; i < graph.length; i++) {
+			dfs(res, i, i, new ArrayList<Integer>(), new boolean[graph.length] );
+			
+		}
+		return res;
+	}
  
-    // The function to do DFS traversal. It uses recursive
-    // DFSUtil()
-    int DFS(int  val)
-    {
-        // Mark all the vertices as not visited(set as
-        // false by default in java)
-        boolean visited[] = new boolean[graph.length];
-         
-        // Call the recursive helper function to print DFS
-        // traversal starting from all vertices one by one
-        return DFSUtil(val, visited);
-            
-    }
+    public List<Integer>[] getGraph() {
+		return graph;
+	}
 
 
 
@@ -124,30 +147,7 @@ public class AdjacencyList implements Iterable<Integer>{
 		return new IteratorGraph();
 	}
 	
-	private class IteratorGraph implements Iterator<Integer>{
-		List<List<Integer>> hierarchy;	
-		private int i=0;
-		private int j=0;
-		
-		public IteratorGraph() {
-			hierarchy=createHierarchy();
-		}
-		
-		@Override
-		public boolean hasNext() {
-			return i<hierarchy.size() && j<hierarchy.get(i).size();
-		}
-
-		@Override
-		public Integer next() {
-			Integer res = hierarchy.get(i).get(j);
-			j++;
-			if(j==hierarchy.get(i).size()) {
-				j=0;
-				i++;
-			}
-			return res;
-		}
-		
+	public int size() {
+		return graph.length;
 	}
 }

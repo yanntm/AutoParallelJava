@@ -22,12 +22,6 @@ public class For2LambdaCleanUpPage implements ICleanUpConfigurationUI {
 	 */
 	private CleanUpOptions fOptions;
 	@Override
-	public void setOptions(CleanUpOptions options) {
-		this.fOptions = options;
-		
-	}
-
-	@Override
 	public Composite createContents(Composite parent) {
 		//The thing that will contains all the element of our page
 		final Composite c = new Composite(parent, SWT.NONE);
@@ -42,6 +36,9 @@ public class For2LambdaCleanUpPage implements ICleanUpConfigurationUI {
 		if(fOptions.isEnabled("cleanup.transform_enhanced_for")) b.setSelection(true);
 		b.addSelectionListener(new SelectionListener() {
 			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {} // Useless but have to be here
+
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if(b.getSelection()) {
 					fOptions.setOption("cleanup.transform_enhanced_for", CleanUpOptionsCore.TRUE);
@@ -49,9 +46,6 @@ public class For2LambdaCleanUpPage implements ICleanUpConfigurationUI {
 					fOptions.setOption("cleanup.transform_enhanced_for", CleanUpOptionsCore.FALSE);
 				}
 			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {} // Useless but have to be here
 		});
 		
 		return c;
@@ -60,11 +54,6 @@ public class For2LambdaCleanUpPage implements ICleanUpConfigurationUI {
 	@Override
 	public int getCleanUpCount() {
 		return 1;
-	}
-
-	@Override
-	public int getSelectedCleanUpCount() {
-		return fOptions.isEnabled("cleanup.transform_enhanced_for") ? 1 : 0; //$NON-NLS-1$
 	}
 
 	@Override
@@ -81,6 +70,17 @@ public class For2LambdaCleanUpPage implements ICleanUpConfigurationUI {
 		}
 		return buf.toString();
 
+	}
+
+	@Override
+	public int getSelectedCleanUpCount() {
+		return fOptions.isEnabled("cleanup.transform_enhanced_for") ? 1 : 0; //$NON-NLS-1$
+	}
+
+	@Override
+	public void setOptions(CleanUpOptions options) {
+		this.fOptions = options;
+		
 	}
 
 }

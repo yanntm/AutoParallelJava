@@ -19,13 +19,13 @@ public class IntArrayBoolMatrixCol implements IBoolMatrixCol {
 	}
 
 	@Override
-	public void set(int col, int row, boolean b) {
-		cols[col].put(row,b);		
+	public int[] getColumn(int col) {		
+		return cols[col].refKeys();
 	}
 
 	@Override
-	public int[] getColumn(int col) {		
-		return cols[col].refKeys();
+	public void set(int col, int row, boolean b) {
+		cols[col].put(row,b);		
 	}
 	
 

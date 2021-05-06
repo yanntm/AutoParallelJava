@@ -41,9 +41,6 @@ public class DependencyGraph {
 	}
 	
 	
-	public MatrixCol getGraph() {
-		return graph;
-	}
 	public void dotExport(PrintWriter out, String style) {
 		for (int coli=0,colie=graph.getColumnCount(); coli<colie;coli++ ) {
 			SparseIntArray col = graph.getColumn(coli);
@@ -53,12 +50,15 @@ public class DependencyGraph {
 			}
 		}
 	}
-
-	public boolean hasEdge(Integer dest, Integer source) {
-		return graph.get(dest, source) != 0;
+	public MatrixCol getGraph() {
+		return graph;
 	}
 
 	public List<ASTNode> getReasons(Integer dest, Integer source) {
 		return reasons.getOrDefault(dest, Collections.emptyMap()).getOrDefault(source, Collections.emptyList());
+	}
+
+	public boolean hasEdge(Integer dest, Integer source) {
+		return graph.get(dest, source) != 0;
 	}
 }

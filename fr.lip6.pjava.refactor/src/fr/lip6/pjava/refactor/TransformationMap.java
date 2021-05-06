@@ -21,21 +21,21 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class TransformationMap extends ASTVisitor {
 	
-	private MethodInvocation map = null;
-	
-	private MethodInvocation terminale = null;
-	
-	private SingleVariableDeclaration parameter = null;
-	
 	private AST ast = null;
-	
-	private Expression left = null;
-	
-	private List<String> variableLocale = new ArrayList<>();
 	
 	private int cas = -1;
 	
+	private Expression left = null;
+	
+	private MethodInvocation map = null;
+	
 	private int nbInstruction = 0;
+	
+	private SingleVariableDeclaration parameter = null;
+	
+	private MethodInvocation terminale = null;
+	
+	private List<String> variableLocale = new ArrayList<>();
 	
 	
 	public TransformationMap(SingleVariableDeclaration parameter) {
@@ -44,10 +44,62 @@ public class TransformationMap extends ASTVisitor {
 	}
 	
 
+	private boolean contains(ITypeBinding[] t, String string) {
+		for(ITypeBinding type:t) {
+			if(type.getQualifiedName().contains(string)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public int getCas() {
+		return cas;
+	}
+
+	public Expression getLeft() {
+		return left;
+	}
+	
+	public MethodInvocation getMap() {
+		return map;
+	}
+	
+	public int getNbInstruction() {
+		return nbInstruction;
+	}
+
+
+	public MethodInvocation getTerminale() {
+		return terminale;
+	}
+
+
+	private void initMap(String type) {
+		switch (type) {
+		case "int":
+		case "java.lang.Integer":
+			map = ast.newMethodInvocation();
+			map.setName(ast.newSimpleName("mapToInt"));
+			break;
+		case "double":
+		case "java.lang.Double":
+			map = ast.newMethodInvocation();
+			map.setName(ast.newSimpleName("mapToDouble"));
+			break;
+		case"long":
+		case "java.lang.Long":
+			map = ast.newMethodInvocation();
+			map.setName(ast.newSimpleName("mapToLong"));
+		default:
+			break;
+		}
+	}
+	
 	@Override
-	public boolean visit(VariableDeclarationFragment node) {
-		variableLocale.add(node.resolveBinding().getKey());
-		return true;
+	public String toString() {
+		return "TransformationMap [map=" + map + ", terminale=" + terminale + ", parameter=" + parameter + ", ast="
+				+ ast + ", left=" + left + ", variableLocale=" + variableLocale + ", cas=" + cas + "]";
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -80,61 +132,20 @@ public class TransformationMap extends ASTVisitor {
 		}
 		return false; 
 	}
-
+	
 	@Override
 	public boolean visit(EnhancedForStatement node) {
 		nbInstruction++;
 		return super.visit(node);
 	}
 	
+	
 	@Override
 	public boolean visit(ForStatement node) {
 		nbInstruction++;
 		return super.visit(node);
 	}
-	
-	@Override
-	public boolean visit(PostfixExpression node) {
-		// TODO verifier si seul operation ne marche pas a refaire
-		nbInstruction++;
-		if (!variableLocale.contains(((SimpleName)node.getOperand()).resolveBinding().getKey())
-			&& node.getOperator().equals(PostfixExpression.Operator.INCREMENT)) {
-			String type = node.getOperand().resolveTypeBinding().getQualifiedName();
-			initMap(type);
-			map = ast.newMethodInvocation();
-			map.setName(ast.newSimpleName("map"));
-			
-			left = node.getOperand();
-			
-			terminale = ast.newMethodInvocation();
-			terminale.setName(ast.newSimpleName("count"));
-			terminale.setExpression(map);
-			
-			cas=1;
-		}
-		return false;
-	}
 
-
-	@Override
-	public boolean visit(PrefixExpression node) {
-		nbInstruction++;
-		return false;
-	}
-
-
-	public MethodInvocation getMap() {
-		return map;
-	}
-	
-	public MethodInvocation getTerminale() {
-		return terminale;
-	}
-	
-	public Expression getLeft() {
-		return left;
-	}
-	
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean visit(MethodInvocation node) {
@@ -168,51 +179,40 @@ public class TransformationMap extends ASTVisitor {
 		
 		return false;
 	}
-	
-	
-	private void initMap(String type) {
-		switch (type) {
-		case "int":
-		case "java.lang.Integer":
-			map = ast.newMethodInvocation();
-			map.setName(ast.newSimpleName("mapToInt"));
-			break;
-		case "double":
-		case "java.lang.Double":
-			map = ast.newMethodInvocation();
-			map.setName(ast.newSimpleName("mapToDouble"));
-			break;
-		case"long":
-		case "java.lang.Long":
-			map = ast.newMethodInvocation();
-			map.setName(ast.newSimpleName("mapToLong"));
-		default:
-			break;
-		}
-	}
 
-	private boolean contains(ITypeBinding[] t, String string) {
-		for(ITypeBinding type:t) {
-			if(type.getQualifiedName().contains(string)) {
-				return true;
-			}
+	@Override
+	public boolean visit(PostfixExpression node) {
+		// TODO verifier si seul operation ne marche pas a refaire
+		nbInstruction++;
+		if (!variableLocale.contains(((SimpleName)node.getOperand()).resolveBinding().getKey())
+			&& node.getOperator().equals(PostfixExpression.Operator.INCREMENT)) {
+			String type = node.getOperand().resolveTypeBinding().getQualifiedName();
+			initMap(type);
+			map = ast.newMethodInvocation();
+			map.setName(ast.newSimpleName("map"));
+			
+			left = node.getOperand();
+			
+			terminale = ast.newMethodInvocation();
+			terminale.setName(ast.newSimpleName("count"));
+			terminale.setExpression(map);
+			
+			cas=1;
 		}
 		return false;
 	}
 
-	public int getCas() {
-		return cas;
-	}
-
 
 	@Override
-	public String toString() {
-		return "TransformationMap [map=" + map + ", terminale=" + terminale + ", parameter=" + parameter + ", ast="
-				+ ast + ", left=" + left + ", variableLocale=" + variableLocale + ", cas=" + cas + "]";
+	public boolean visit(PrefixExpression node) {
+		nbInstruction++;
+		return false;
 	}
 	
-	public int getNbInstruction() {
-		return nbInstruction;
+	@Override
+	public boolean visit(VariableDeclarationFragment node) {
+		variableLocale.add(node.resolveBinding().getKey());
+		return true;
 	}
 	
 //	public void end() {

@@ -9,6 +9,12 @@ import generation.graphe.methode.invocation.android.util.SparseIntArray;
 
 public class GraphUtils {
 
+	public static void collectPrefix(Set<Integer> safeNodes, MatrixCol graph) {
+		// work with predecessor relationship
+		MatrixCol tgraph = graph.transpose();
+		collectSuffix(safeNodes, tgraph);
+	}
+
 	public static void collectSuffix(Set<Integer> safeNodes, MatrixCol graph) {
 	
 		Set<Integer> seen = new HashSet<>();
@@ -28,12 +34,6 @@ public class GraphUtils {
 			todo = next;			
 		}
 		safeNodes.addAll(seen);
-	}
-
-	public static void collectPrefix(Set<Integer> safeNodes, MatrixCol graph) {
-		// work with predecessor relationship
-		MatrixCol tgraph = graph.transpose();
-		collectSuffix(safeNodes, tgraph);
 	}
 
 }

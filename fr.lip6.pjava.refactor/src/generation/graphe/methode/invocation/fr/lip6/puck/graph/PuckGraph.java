@@ -9,11 +9,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.IBinding;
-
-import java.util.Map.Entry;
 
 /**
  * The PuckGraph is the central operational Puck graph model object.
@@ -27,11 +26,22 @@ import java.util.Map.Entry;
  *
  */
 public class PuckGraph {
-	private Map<String,Set<Integer>> setDeclarations = new HashMap<>();
-	private List<Rule> rules = new ArrayList<>();
-	private DependencyNodes nodes;
-	private DependencyGraph useGraph;
+	public static class Rule {
+		public final Set<Integer> from;
+		public final Set<Integer> hide;
+		public String text;
+		public Rule(Set<Integer> hide, Set<Integer> from, String text) {
+			this.hide = hide;
+			this.from = from;
+			this.text = text;
+		}
+	}
 	private DependencyGraph composeGraph;
+	private DependencyNodes nodes;
+	private List<Rule> rules = new ArrayList<>();
+	private Map<String,Set<Integer>> setDeclarations = new HashMap<>();
+
+	private DependencyGraph useGraph;
 
 	public PuckGraph(DependencyNodes nodes) {
 		this.nodes = nodes;
@@ -39,52 +49,14 @@ public class PuckGraph {
 		this.composeGraph = new DependencyGraph(nodes.size());
 	}
 
-	public DependencyGraph getUseGraph() {
-		return useGraph;
-	}
-
-	public DependencyNodes getNodes() {
-		return nodes;
-	}
-
-	public DependencyGraph getComposeGraph() {
-		return composeGraph;
+	public void addRule (Set<Integer> hide, Set<Integer> from, String text) {
+		this.rules.add (new Rule(hide,from, text));
 	}
 
 	public void addSetDeclaration(String name, Set<Integer> nodes) {
 		setDeclarations.put(name, nodes);
 	}
 
-	public Set<Integer> getSetDeclaration (String name) {
-		return setDeclarations.getOrDefault(name, Collections.emptySet());
-	}
-	
-	public static class Rule {
-		public String text;
-		public final Set<Integer> hide;
-		public final Set<Integer> from;
-		public Rule(Set<Integer> hide, Set<Integer> from, String text) {
-			this.hide = hide;
-			this.from = from;
-			this.text = text;
-		}
-	}
-	
-	public void addRule (Set<Integer> hide, Set<Integer> from, String text) {
-		this.rules.add (new Rule(hide,from, text));
-	}
-
-	public int findIndex(IBinding key) {
-		return nodes.findIndex(key);
-	}
-
-	public int findIndex(String key) {
-		return nodes.findIndex(key);
-	}
-
-	public List<Rule> getRules() {
-		return rules;
-	}
 	/**
 	 * A visual representation for our graphs.
 	 * @param path where will we build this dot file 
@@ -133,6 +105,33 @@ public class PuckGraph {
 
 		out.println("}");
 		out.close();
+	}
+
+	public int findIndex(IBinding key) {
+		return nodes.findIndex(key);
+	}
+	
+	public int findIndex(String key) {
+		return nodes.findIndex(key);
+	}
+	
+	public DependencyGraph getComposeGraph() {
+		return composeGraph;
+	}
+
+	public DependencyNodes getNodes() {
+		return nodes;
+	}
+
+	public List<Rule> getRules() {
+		return rules;
+	}
+
+	public Set<Integer> getSetDeclaration (String name) {
+		return setDeclarations.getOrDefault(name, Collections.emptySet());
+	}
+	public DependencyGraph getUseGraph() {
+		return useGraph;
 	}
 
 

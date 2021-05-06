@@ -26,8 +26,8 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
-import org.eclipse.jdt.internal.corext.fix.LinkedProposalModel;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix.CompilationUnitRewriteOperation;
+import org.eclipse.jdt.internal.corext.fix.LinkedProposalModel;
 import org.eclipse.jdt.internal.corext.refactoring.structure.CompilationUnitRewrite;
 
 /**
@@ -38,15 +38,19 @@ import org.eclipse.jdt.internal.corext.refactoring.structure.CompilationUnitRewr
  */
 @SuppressWarnings("restriction")
 public class TraitementFor extends CompilationUnitRewriteOperation {
+	private static Map<String, List<Name>> importAdded = new HashMap<>();
+	static void clear () {
+		importAdded.clear();
+	}
+	private HashMap<String, Set<String>> methode;
+	private String name;
+	private Statement node;
+
 	/**
 	 * CompilationUnit represents the AST, and to call a visitor on the tree
 	 */
 	private CompilationUnit unit;
-	private Statement node;
-	private static Map<String, List<Name>> importAdded = new HashMap<>();
-	private String name;
-	private HashMap<String, Set<String>> methode;
-
+	
 	/**
 	 * The constructor used to initiate the attribute
 	 * @param unit The CompilationUnit of the document
@@ -61,7 +65,86 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		this.node = node;
 		this.methode = method;
 	}
+
+	/**
+	 * Method uses to verify if the type t is a Collection
+	 * @param t the type we want to check
+	 * @return if t is a Collection
+	 */
+	private boolean containsCollection(ITypeBinding t) {
+		for (ITypeBinding i :t.getInterfaces()){
+			if(i.getBinaryName().contains("java.util.Collection")) {
+				return true;
+			}
+		}
+		return false;
+	}
 	
+	private boolean containsImport(Name name) {
+		boolean test1 = false;
+		for (Object o : unit.imports()) {
+			ImportDeclaration im = (ImportDeclaration) o;
+			if (im.getName().getFullyQualifiedName().equals(name.getFullyQualifiedName())) {
+				test1 = true;
+				break;
+			}
+				
+		}
+		
+		for(Name n :  importAdded.get(this.name)) {
+			if (n.getFullyQualifiedName().equals(name.getFullyQualifiedName())) {
+				return true;
+			}
+		}
+		return test1;
+	}
+
+	/**
+	 * Detect the type of the array 
+	 * @param ast The ast that we are in
+	 * @param node The node we are looking at
+	 * @param t the type of the array
+	 * @param rewrite 
+	 * @return a new method Invocation fill with the good parameter or null if it is not an array
+	 */
+	@SuppressWarnings("unchecked")
+	private MethodInvocation detectCollectionType(AST ast, Expression expression, ITypeBinding t, ASTRewrite rewrite) {
+		if(!t.isArray() && !containsCollection(t)) {
+			return null;
+		}else {
+			if(containsCollection(t)) {
+				MethodInvocation replaceMethod = ast.newMethodInvocation();
+				replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,expression)); 
+				replaceMethod.setName(ast.newSimpleName("stream"));
+				return replaceMethod;
+			}
+			else {
+				
+				MethodInvocation replaceMethod = ast.newMethodInvocation();
+				replaceMethod.arguments().add( ASTNode.copySubtree(ast,expression));
+				replaceMethod.setName(ast.newSimpleName("stream"));
+				replaceMethod.setExpression(ast.newSimpleName("Arrays"));
+				
+				
+				//Doit ajouter dans les import java.util.Arrays
+				ImportDeclaration im = ast.newImportDeclaration();
+				Name name = ast.newName(new String[] {"java", "util", "Arrays"});
+				im.setName(name);
+				
+				if (!containsImport(name)) {
+					importAdded.get(this.name).add(name);
+					ListRewrite lrw = rewrite.getListRewrite(unit, CompilationUnit.IMPORTS_PROPERTY);
+					lrw.insertLast(im, null);
+				}
+				
+				
+				
+				return replaceMethod;
+				
+			}
+		}
+	}
+
 	@SuppressWarnings({ "unchecked" })
 	@Override
 	public void rewriteAST(CompilationUnitRewrite cuRewrite, LinkedProposalModel linkedModel) throws CoreException{
@@ -248,6 +331,11 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		 //Return a CompilationUnitChange that all our modification
 	}
 
+	@Override
+	public String toString() {
+		return "TraitementFor [unit=" + unit + ", node=" + node + ", name=" + name + "]";
+	}
+	
 	private void verifParameter(SingleVariableDeclaration parameter, AST ast) {
 		Type t = parameter.getType();
 		if (t.isPrimitiveType()) {
@@ -284,7 +372,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			parameter.setType(ast.newSimpleType(finalType));
 		}
 	}
-	
+
 	private MethodInvocation verifParameter2(SingleVariableDeclaration parameter, AST ast) {
 		Type t = parameter.getType();
 		if (t.isPrimitiveType()) {
@@ -323,94 +411,6 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		}else {
 			return null;
 		}
-	}
-
-	private boolean containsImport(Name name) {
-		boolean test1 = false;
-		for (Object o : unit.imports()) {
-			ImportDeclaration im = (ImportDeclaration) o;
-			if (im.getName().getFullyQualifiedName().equals(name.getFullyQualifiedName())) {
-				test1 = true;
-				break;
-			}
-				
-		}
-		
-		for(Name n :  importAdded.get(this.name)) {
-			if (n.getFullyQualifiedName().equals(name.getFullyQualifiedName())) {
-				return true;
-			}
-		}
-		return test1;
-	}
-
-	/**
-	 * Detect the type of the array 
-	 * @param ast The ast that we are in
-	 * @param node The node we are looking at
-	 * @param t the type of the array
-	 * @param rewrite 
-	 * @return a new method Invocation fill with the good parameter or null if it is not an array
-	 */
-	@SuppressWarnings("unchecked")
-	private MethodInvocation detectCollectionType(AST ast, Expression expression, ITypeBinding t, ASTRewrite rewrite) {
-		if(!t.isArray() && !containsCollection(t)) {
-			return null;
-		}else {
-			if(containsCollection(t)) {
-				MethodInvocation replaceMethod = ast.newMethodInvocation();
-				replaceMethod.setExpression((Expression) ASTNode.copySubtree(ast,expression)); 
-				replaceMethod.setName(ast.newSimpleName("stream"));
-				return replaceMethod;
-			}
-			else {
-				
-				MethodInvocation replaceMethod = ast.newMethodInvocation();
-				replaceMethod.arguments().add( ASTNode.copySubtree(ast,expression));
-				replaceMethod.setName(ast.newSimpleName("stream"));
-				replaceMethod.setExpression(ast.newSimpleName("Arrays"));
-				
-				
-				//Doit ajouter dans les import java.util.Arrays
-				ImportDeclaration im = ast.newImportDeclaration();
-				Name name = ast.newName(new String[] {"java", "util", "Arrays"});
-				im.setName(name);
-				
-				if (!containsImport(name)) {
-					importAdded.get(this.name).add(name);
-					ListRewrite lrw = rewrite.getListRewrite(unit, CompilationUnit.IMPORTS_PROPERTY);
-					lrw.insertLast(im, null);
-				}
-				
-				
-				
-				return replaceMethod;
-				
-			}
-		}
-	}
-
-	/**
-	 * Method uses to verify if the type t is a Collection
-	 * @param t the type we want to check
-	 * @return if t is a Collection
-	 */
-	private boolean containsCollection(ITypeBinding t) {
-		for (ITypeBinding i :t.getInterfaces()){
-			if(i.getBinaryName().contains("java.util.Collection")) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	static void clear () {
-		importAdded.clear();
-	}
-
-	@Override
-	public String toString() {
-		return "TraitementFor [unit=" + unit + ", node=" + node + ", name=" + name + "]";
 	}
 	
 	

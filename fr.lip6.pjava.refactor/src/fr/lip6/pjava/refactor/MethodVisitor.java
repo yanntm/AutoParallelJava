@@ -22,27 +22,47 @@ import org.eclipse.jdt.core.dom.SynchronizedStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class MethodVisitor extends ASTVisitor {
-	private boolean readOnly = true;
-	private boolean threadSafe = false;
+	private List<MethodDeclaration> listCycle;
+	private Set<String> localVariable = new HashSet<String>();
+	private Map<String, Set<String>> map;
 	private boolean modifLocal = true;
 	private boolean problem = false;
-	private Map<String, Set<String>> map;
-	private Set<String> localVariable = new HashSet<String>();
-	private List<MethodDeclaration> listCycle;
-
-	public MethodVisitor(Map<String, Set<String>> map) {
-		this.map=map;
-	}
+	private boolean readOnly = true;
+	private boolean threadSafe = false;
 
 	public MethodVisitor(HashMap<String, Set<String>> map, List<MethodDeclaration> list) {
 		this(map);
 		listCycle=list;
 	}
 
-	@Override
-	public boolean visit(VariableDeclarationFragment node) {
-		localVariable.add(node.resolveBinding().getKey());
-		return super.visit(node);
+	public MethodVisitor(Map<String, Set<String>> map) {
+		this.map=map;
+	}
+
+	public boolean isModifLocal() {
+		return modifLocal;
+	}
+
+	public boolean isProblem() {
+		return problem;
+	}
+
+	public boolean isReadOnly() {
+		return readOnly;
+	}
+
+	private boolean isSameCycle(MethodInvocation node) {
+		if (listCycle!=null) {
+			for (MethodDeclaration methodDeclaration : listCycle) {
+				if (methodDeclaration.resolveBinding().getKey().equals(node.resolveMethodBinding().getKey()))return true;
+			}
+		}
+		
+		return false;
+	}
+
+	public boolean isThreadSafe() {
+		return threadSafe;
 	}
 
 	@Override
@@ -62,6 +82,27 @@ public class MethodVisitor extends ASTVisitor {
 		});
 
 		readOnly=false;
+		return false;
+	}
+
+	@Override
+	public boolean visit(MethodInvocation node) {
+		if (!isSameCycle(node)) {
+			if (node.getExpression() != null) {
+				ITypeBinding expressionType = node.getExpression().resolveTypeBinding();
+				if (expressionType.getQualifiedName().equals("java.util.concurrent.locks.Lock")) threadSafe=true;
+			}
+			String key = node.resolveMethodBinding().getKey();
+			//System.out.println(key);
+			if(map.get("NotParallelizable").contains(key)) {
+				modifLocal = false;
+				readOnly = false;
+				// TODO : threadSafe = false ?
+			} else if(!(map.get("ThreadSafe").contains(key) && map.get("ModifLocal").contains(key) && map.get("ReadOnly").contains(key))) {
+				problem = true;
+			}
+		}
+
 		return false;
 	}
 
@@ -113,50 +154,9 @@ public class MethodVisitor extends ASTVisitor {
 	}
 
 	@Override
-	public boolean visit(MethodInvocation node) {
-		if (!isSameCycle(node)) {
-			if (node.getExpression() != null) {
-				ITypeBinding expressionType = node.getExpression().resolveTypeBinding();
-				if (expressionType.getQualifiedName().equals("java.util.concurrent.locks.Lock")) threadSafe=true;
-			}
-			String key = node.resolveMethodBinding().getKey();
-			//System.out.println(key);
-			if(map.get("NotParallelizable").contains(key)) {
-				modifLocal = false;
-				readOnly = false;
-				// TODO : threadSafe = false ?
-			} else if(!(map.get("ThreadSafe").contains(key) && map.get("ModifLocal").contains(key) && map.get("ReadOnly").contains(key))) {
-				problem = true;
-			}
-		}
-
-		return false;
-	}
-
-	private boolean isSameCycle(MethodInvocation node) {
-		if (listCycle!=null) {
-			for (MethodDeclaration methodDeclaration : listCycle) {
-				if (methodDeclaration.resolveBinding().getKey().equals(node.resolveMethodBinding().getKey()))return true;
-			}
-		}
-		
-		return false;
-	}
-
-	public boolean isReadOnly() {
-		return readOnly;
-	}
-
-	public boolean isThreadSafe() {
-		return threadSafe;
-	}
-
-	public boolean isModifLocal() {
-		return modifLocal;
-	}
-
-	public boolean isProblem() {
-		return problem;
+	public boolean visit(VariableDeclarationFragment node) {
+		localVariable.add(node.resolveBinding().getKey());
+		return super.visit(node);
 	}
 
 }

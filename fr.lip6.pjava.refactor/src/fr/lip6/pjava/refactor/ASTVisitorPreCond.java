@@ -34,15 +34,15 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
  */
 public class ASTVisitorPreCond extends ASTVisitor {
 	/**
-	 * Use to verify if the enhancedFor can be upgradable
-	 */
-	private boolean isUpgradable;
-	
-	private boolean notInterrupted = true;
-	/**
 	 * We keep the caller to be sure to not verify things outside of the EnhancedFor
 	 */
 	private final EnhancedForStatement caller;
+	
+	/**
+	 * Use to verify if the enhancedFor can be upgradable
+	 */
+	private boolean isUpgradable;
+	private boolean notInterrupted = true;
 	/**
 	 * List of variables keys encountered in the EnhancedFor
 	 */
@@ -60,6 +60,59 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	}
 	
 	/**
+	 * Check if the given Exceptions are catched inside the enhancedFor
+	 * @param exceptions The exceptions we are looking for
+	 * @param parent the parent node of the node we are looking at
+	 * @return if all the exceptions are handles inside the enhancedFor 
+	 */
+	protected boolean checkExceptionCatch(List<String> exceptions, ASTNode parent) {
+		if (exceptions.size()==0) return true;
+		while(parent != caller) {
+			if (parent.getNodeType() == ASTNode.TRY_STATEMENT) {
+				TryStatement tryStat = (TryStatement) parent;
+				for(Object o : tryStat.catchClauses()) {
+					if(o instanceof CatchClause) {
+						String exceptionCatched = ((CatchClause) o).getException().resolveBinding()
+								.getType().getQualifiedName();
+						if(exceptionCatched.equals("java.lang.Exception")) {
+							return true;
+						}
+						if(exceptions.remove(exceptionCatched)) {
+							if(exceptions.size() == 0) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+			parent = parent.getParent();
+		}
+		return false;
+	}
+	
+
+	private boolean containsCollection(ITypeBinding t) {
+		for (ITypeBinding i :t.getInterfaces()){
+			if(i.getBinaryName().contains("java.util.Collection")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isCollection(Expression expression) {
+		ITypeBinding t = expression.resolveTypeBinding();
+		if (t == null) {
+			return false;
+		}
+		if(!t.isArray() && !containsCollection(t)) {
+			return false;
+		}else {
+			return true;
+		}
+	}
+	
+	/**
 	 * Return if the given EnhancedFor is Upgradable
 	 * @return if the given EnhancedFor is Upgradable
 	 */
@@ -67,13 +120,6 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		return notInterrupted && (isUpgradable || varUsedInsideDeclaredOutside.size()==1);
 	}
 	
-
-	@Override
-	public boolean visit(VariableDeclarationFragment node) {
-		varDeclaredInFor.add(node.resolveBinding().getKey());
-		return true;
-	}
-
 	@Override
 	public boolean visit(Assignment node) {
 		//no problems with the for parameter variables 
@@ -109,8 +155,6 @@ public class ASTVisitorPreCond extends ASTVisitor {
 			varKey = ((SimpleName) left).resolveBinding().getKey();
 		}
 		
-	
-		
 		if(!varDeclaredInFor.contains(varKey)) {
 			isUpgradable = false;
 			varUsedInsideDeclaredOutside.add(varKey);
@@ -118,32 +162,71 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		}
 		return true;
 	}
-	
+
 	@Override
-	public boolean visit(PrefixExpression node) {
-		//no problems with the for parameter variables 
-		String paramterKey;
-		if(caller instanceof EnhancedForStatement) {
-			paramterKey =caller.getParameter().resolveBinding().getKey();
-		}else {
-			return false;
-		}
-		Expression left = node.getOperand();
-		String varKey = null;
-		if(left instanceof QualifiedName) {
-			varKey = ((QualifiedName) left).getQualifier().resolveBinding().getKey();
-			if(paramterKey == varKey) {
-				return true;
-			}
-		} else if(left instanceof SimpleName){
-			varKey = ((SimpleName) left).resolveBinding().getKey();
+	public  boolean visit(BreakStatement node) {
+		ASTNode parent = node.getParent();
+		// find out which loop or switch has been broken
+		while( parent.getNodeType() != ASTNode.ENHANCED_FOR_STATEMENT
+				&& parent.getNodeType() != ASTNode.FOR_STATEMENT
+				&& parent.getNodeType() != ASTNode.WHILE_STATEMENT
+				&& parent.getNodeType() != ASTNode.DO_STATEMENT 
+				&& parent.getNodeType() != ASTNode.SWITCH_CASE ) {
+			parent = parent.getParent();
 		}
 		
-		if(!varDeclaredInFor.contains(varKey)) {
+		if(parent.equals(caller)) {
+			notInterrupted = false;
+			return false;
+		}
+		return true;
+	}
+	
+	@Override
+	public boolean visit(ClassInstanceCreation node) {
+		ASTNode parent = node.getParent();
+		ArrayList<String> exceptions = new ArrayList<String>();
+		if (node.resolveConstructorBinding() == null ) return false;
+		for(ITypeBinding b : node.resolveConstructorBinding().getExceptionTypes()) {
+			exceptions.add(b.getQualifiedName());
+		}
+		if(!checkExceptionCatch(exceptions, parent)) {
+			isUpgradable = false;
+		}
+		return false;
+	}
+	
+	//Identique à celui de Break sauf sans le SWITCH dans la condition
+	@Override
+	public boolean visit(ContinueStatement node) {
+		ASTNode parent = node.getParent();
+		// find out which loop has been continued
+		while( parent.getNodeType() != ASTNode.ENHANCED_FOR_STATEMENT
+				&& parent.getNodeType() != ASTNode.FOR_STATEMENT
+				&& parent.getNodeType() != ASTNode.WHILE_STATEMENT
+				&& parent.getNodeType() != ASTNode.DO_STATEMENT ) {
+			parent = parent.getParent();
+		}
+		if(parent.equals(caller)) {
+			notInterrupted = false;
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public boolean visit(MethodInvocation node) {
+		ASTNode parent = node.getParent();
+		ArrayList<String> exceptions = new ArrayList<String>();
+		for(ITypeBinding b : node.resolveMethodBinding().getExceptionTypes()) {
+			exceptions.add(b.getQualifiedName());
+		}
+		if(!checkExceptionCatch(exceptions, parent)) {
 			isUpgradable = false;
 			return false;
 		}
 		return true;
+
 	}
 	
 	@Override
@@ -172,6 +255,34 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		}
 		return true;
 	}
+	
+	@Override
+	public boolean visit(PrefixExpression node) {
+		//no problems with the for parameter variables 
+		String paramterKey;
+		if(caller instanceof EnhancedForStatement) {
+			paramterKey = caller.getParameter().resolveBinding().getKey();
+		}else {
+			return false;
+		}
+		Expression left = node.getOperand();
+		String varKey = null;
+		if(left instanceof QualifiedName) {
+			varKey = ((QualifiedName) left).getQualifier().resolveBinding().getKey();
+			if(paramterKey == varKey) {
+				return true;
+			}
+		} else if(left instanceof SimpleName){
+			varKey = ((SimpleName) left).resolveBinding().getKey();
+		}
+		
+		if(!varDeclaredInFor.contains(varKey)) {
+			isUpgradable = false;
+			return false;
+		}
+		return true;
+	}
+	
 
 	//Traitement des sortie anticipees
 	@Override
@@ -180,45 +291,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		return false;
 	}
 	
-	@Override
-	public  boolean visit(BreakStatement node) {
-		ASTNode parent = node.getParent();
-		// find out which loop or switch has been broken
-		while( parent.getNodeType() != ASTNode.ENHANCED_FOR_STATEMENT
-				&& parent.getNodeType() != ASTNode.FOR_STATEMENT
-				&& parent.getNodeType() != ASTNode.WHILE_STATEMENT
-				&& parent.getNodeType() != ASTNode.DO_STATEMENT 
-				&& parent.getNodeType() != ASTNode.SWITCH_CASE ) {
-			parent = parent.getParent();
-		}
-		
-		if(parent.equals(caller)) {
-			notInterrupted = false;
-			return false;
-		}
-		return true;
-	}
-	
-	//Identique à celui de Break sauf sans le SWITCH dans la condition
-	@Override
-	public boolean visit(ContinueStatement node) {
-		ASTNode parent = node.getParent();
-		// find out which loop has been continued
-		while( parent.getNodeType() != ASTNode.ENHANCED_FOR_STATEMENT
-				&& parent.getNodeType() != ASTNode.FOR_STATEMENT
-				&& parent.getNodeType() != ASTNode.WHILE_STATEMENT
-				&& parent.getNodeType() != ASTNode.DO_STATEMENT ) {
-			parent = parent.getParent();
-		}
-		if(parent.equals(caller)) {
-			notInterrupted = false;
-			return false;
-		}
-		return true;
-	}
-
 	//Traitement des exceptions qui peuvent sortir de la boucle for
-	
 	@Override
 	public  boolean visit(ThrowStatement node) {
 		ASTNode parent = node.getParent();
@@ -234,85 +307,9 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	}
 	
 	@Override
-	public boolean visit(MethodInvocation node) {
-		ASTNode parent = node.getParent();
-		ArrayList<String> exceptions = new ArrayList<String>();
-		for(ITypeBinding b : node.resolveMethodBinding().getExceptionTypes()) {
-			exceptions.add(b.getQualifiedName());
-		}
-		if(!checkExceptionCatch(exceptions, parent)) {
-			isUpgradable = false;
-			return false;
-		}
+	public boolean visit(VariableDeclarationFragment node) {
+		varDeclaredInFor.add(node.resolveBinding().getKey());
 		return true;
-
-	}
-	
-	@Override
-	public boolean visit(ClassInstanceCreation node) {
-		ASTNode parent = node.getParent();
-		ArrayList<String> exceptions = new ArrayList<String>();
-		if (node.resolveConstructorBinding() == null ) return false;
-		for(ITypeBinding b : node.resolveConstructorBinding().getExceptionTypes()) {
-			exceptions.add(b.getQualifiedName());
-		}
-		if(!checkExceptionCatch(exceptions, parent)) {
-			isUpgradable = false;
-		}
-		return false;
-	}
-	
-
-	/**
-	 * Check if the given Exceptions are catched inside the enhancedFor
-	 * @param exceptions The exceptions we are looking for
-	 * @param parent the parent node of the node we are looking at
-	 * @return if all the exceptions are handles inside the enhancedFor 
-	 */
-	protected boolean checkExceptionCatch(List<String> exceptions, ASTNode parent) {
-		if (exceptions.size()==0) return true;
-		while(parent != caller) {
-			if (parent.getNodeType() == ASTNode.TRY_STATEMENT) {
-				TryStatement tryStat = (TryStatement) parent;
-				for(Object o : tryStat.catchClauses()) {
-					if(o instanceof CatchClause) {
-						String exceptionCatched = ((CatchClause) o).getException().resolveBinding()
-								.getType().getQualifiedName();
-						if(exceptionCatched.equals("java.lang.Exception")) {
-							return true;
-						}
-						if(exceptions.remove(exceptionCatched)) {
-							if(exceptions.size() == 0) {
-								return true;
-							}
-						}
-					}
-				}
-			}
-			parent = parent.getParent();
-		}
-		return false;
-	}
-	
-	private boolean isCollection(Expression expression) {
-		ITypeBinding t = expression.resolveTypeBinding();
-		if (t == null) {
-			return false;
-		}
-		if(!t.isArray() && !containsCollection(t)) {
-			return false;
-		}else {
-			return true;
-		}
-	}
-	
-	private boolean containsCollection(ITypeBinding t) {
-		for (ITypeBinding i :t.getInterfaces()){
-			if(i.getBinaryName().contains("java.util.Collection")) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 }
