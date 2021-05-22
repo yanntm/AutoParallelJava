@@ -6,6 +6,7 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.Assignment.Operator;
 import org.eclipse.jdt.core.dom.BreakStatement;
 import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -17,6 +18,7 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
@@ -43,6 +45,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	 */
 	private boolean isUpgradable;
 	private boolean notInterrupted = true;
+	private boolean noProblem = true;
 	/**
 	 * List of variables keys encountered in the EnhancedFor
 	 */
@@ -117,7 +120,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	 * @return if the given EnhancedFor is Upgradable
 	 */
 	public boolean isUpgradable() {
-		return notInterrupted && (isUpgradable || varUsedInsideDeclaredOutside.size()==1);
+		return notInterrupted && noProblem && (isUpgradable || varUsedInsideDeclaredOutside.size()==1);
 	}
 	
 	@Override
@@ -131,6 +134,16 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		}
 		Expression left = node.getLeftHandSide();
 		String varKey = null;
+//		if (left instanceof Name && node.getOperator()==Operator.ASSIGN) {
+//			IBinding bind = ((Name) left).resolveBinding();
+//			if (bind instanceof IVariableBinding) {
+//				if (!varDeclaredInFor.contains(bind.getKey())) {
+//					noProblem = false;
+//					return false;
+//				}
+//			}
+//		}
+
 		//verification du statut final
 		if(
 			node.getRightHandSide().getNodeType()==ASTNode.QUALIFIED_NAME
@@ -157,6 +170,9 @@ public class ASTVisitorPreCond extends ASTVisitor {
 		
 		if(!varDeclaredInFor.contains(varKey)) {
 			isUpgradable = false;
+			if (node.getOperator()==Operator.ASSIGN) {
+				noProblem=false;
+			}
 			varUsedInsideDeclaredOutside.add(varKey);
 			return false;
 		}

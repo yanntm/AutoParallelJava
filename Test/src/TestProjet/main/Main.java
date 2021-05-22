@@ -9,14 +9,19 @@ public class Main {
 
 	public static void main(String[] args) {
 		List<Point> points = new ArrayList<>();
-		
+
 		for (Point point : points) {
 			point.move();
 		}
-		
-		for (Point point : points) {
-			System.out.println("TEMPE");
+
+		try {
+			for (Point point : points) {
+				point.here(points.get(0));
+			}
+		}catch(Exception e) {
+
 		}
+
 	}
 
 }

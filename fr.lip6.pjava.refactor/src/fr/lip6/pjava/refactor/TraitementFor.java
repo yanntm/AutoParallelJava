@@ -155,14 +155,12 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		Statement body = ((EnhancedForStatement) node).getBody();
 		SingleVariableDeclaration parameter = ((EnhancedForStatement) node).getParameter();
 		
-		MethodInvocation mapTo = verifParameter2(parameter, ast);
-//		verifParameter(parameter, ast);
-		
-		
-		
-		
 		//We call the accept method on the AST, that will visit all the nodes, and use a personalized ASTVisitor to apply our changes
 		ITypeBinding t = expression.resolveTypeBinding();
+		
+		MethodInvocation mapTo = verifParameter2(parameter, t, ast);
+//		verifParameter(parameter, ast);
+		
 		
 		//Verification du type de tableau sur lequel on veut stream
 		MethodInvocation replaceMethod = detectCollectionType(ast, expression, t, rewrite);
@@ -336,46 +334,10 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		return "TraitementFor [unit=" + unit + ", node=" + node + ", name=" + name + "]";
 	}
 	
-	private void verifParameter(SingleVariableDeclaration parameter, AST ast) {
+	private MethodInvocation verifParameter2(SingleVariableDeclaration parameter, ITypeBinding typeFor, AST ast) {
 		Type t = parameter.getType();
-		if (t.isPrimitiveType()) {
-			PrimitiveType pT = (PrimitiveType) t;
-			Name finalType;
-			switch (pT.toString()) {
-			case "int":
-				finalType = ast.newName("Integer");
-				break;
-			case "char":
-				finalType = ast.newName("Character");
-				break;
-			case "boolean":
-				finalType = ast.newName("Boolean");
-				break;
-			case "short":
-				finalType = ast.newName("Short");
-				break;
-			case "long":
-				finalType = ast.newName("Long");
-				break;
-			case "float":
-				finalType = ast.newName("Float");
-				break;
-			case "double":
-				finalType = ast.newName("Double");
-				break;
-			case "byte":
-				finalType = ast.newName("Byte");
-				break;
-			default:
-				return;
-			}
-			parameter.setType(ast.newSimpleType(finalType));
-		}
-	}
-
-	private MethodInvocation verifParameter2(SingleVariableDeclaration parameter, AST ast) {
-		Type t = parameter.getType();
-		if (t.isPrimitiveType()) {
+		ITypeBinding b = typeFor.getElementType();
+		if (t.isPrimitiveType() && !(typeFor.isArray() && !typeFor.isPrimitive() && !b.getBinaryName().equals(((PrimitiveType) t).toString()))) {
 			MethodInvocation mapTo = ast.newMethodInvocation();
 			PrimitiveType pT = (PrimitiveType) t;
 			switch (pT.toString()) {

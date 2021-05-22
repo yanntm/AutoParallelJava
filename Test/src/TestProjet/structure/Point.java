@@ -1,5 +1,7 @@
 package TestProjet.structure;
 
+import java.util.Objects;
+
 import TestProjet.utils.Math;
 
 public class Point {
@@ -26,4 +28,23 @@ public class Point {
 			}
 		}
 	}
+	
+	public void here(Point p) throws Exception{
+		if (!p.equals(this))throw new Exception("Pas ici");
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Point other = (Point) obj;
+		return x == other.x && y == other.y;
+	}
+	
+	
 }

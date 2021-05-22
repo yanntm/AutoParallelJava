@@ -78,7 +78,7 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 
 			PuckGraph graph = GraphBuilder.collectGraph(parsedCu);
 
-			exportGraph(graph);
+//			exportGraph(graph);
 			
 			initialiseMap();
 
