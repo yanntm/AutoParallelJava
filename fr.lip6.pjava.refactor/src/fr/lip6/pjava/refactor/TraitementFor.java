@@ -176,7 +176,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		ITypeBinding t = expression.resolveTypeBinding();
 		
 		//Vérification du type de tableau et création du machin.stream
-		MethodInvocation mapTo = verifParameter2(parameter, t, ast);
+		MethodInvocation mapTo = verifParameter(parameter, t, ast);
 		
 		//Verification du type de tableau sur lequel on veut stream
 		MethodInvocation replaceMethod = detectCollectionType(ast, expression, t, rewrite);
@@ -345,7 +345,15 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		return "TraitementFor [unit=" + unit + ", node=" + node + ", name=" + name + "]";
 	}
 	
-	private MethodInvocation verifParameter2(SingleVariableDeclaration parameter, ITypeBinding typeFor, AST ast) {
+	/**
+	 * Permet de vérifier le type de paramétre et si 
+	 * l'appel à un mapTo est nécessaire ou non
+	 * @param parameter declaration du paramètre
+	 * @param typeFor type de la collection
+	 * @param ast ast appartennat au COmpilationUnit
+	 * @return l'appel à un mapTo s'il y a besoin
+	 */
+	private MethodInvocation verifParameter(SingleVariableDeclaration parameter, ITypeBinding typeFor, AST ast) {
 		Type t = parameter.getType();
 		ITypeBinding b = typeFor.getElementType();
 		if (t.isPrimitiveType() && !(typeFor.isArray() && !typeFor.isPrimitive() && !b.getBinaryName().equals(((PrimitiveType) t).toString()))) {

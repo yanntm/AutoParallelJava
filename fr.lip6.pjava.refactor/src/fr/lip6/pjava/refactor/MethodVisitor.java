@@ -28,45 +28,98 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
  *
  */
 public class MethodVisitor extends ASTVisitor {
+	/**
+	 * La liste des cycles présentant dans le graphe des dépendances
+	 */
 	private List<MethodDeclaration> listCycle;
+	/**
+	 * Ensemebles des variables locales
+	 */
 	private Set<String> localVariable = new HashSet<String>();
-	private Map<String, Set<String>> map;
+	/**
+	 * Map des catégorie de méthodes
+	 */
+	private Map<String, Set<String>> methodTag;
+	/**
+	 * Si la méthode est dans la catégorie modifLocal
+	 */
 	private boolean modifLocal = true;
-	private boolean problem = false;
+	/**
+	 * S'il y a un probleme qui empeche la parallélisation
+	 */
+	private boolean notParallelisable = false;
+	/**
+	 * Si la méthode ne fait aucune modification d'attribut
+	 */
 	private boolean readOnly = true;
+	/**
+	 * Si des mécanismes de synchronisation sont présent
+	 */
 	private boolean threadSafe = false;
 
-	public MethodVisitor(HashMap<String, Set<String>> map, List<MethodDeclaration> list) {
+	/**
+	 * Constructeur permettant d'initaliser la catégorie de la liste
+	 * ainsi que si la méthode fait partie d'un cycle le cycle dans lequelle elle est présente
+	 * @param map catégorie des méthodes
+	 * @param listCycle liste du cycle du quelle elle fait partie
+	 */
+	public MethodVisitor(HashMap<String, Set<String>> map, List<MethodDeclaration> listCycle) {
 		this(map);
-		listCycle=list;
+		this.listCycle=listCycle;
 	}
 
+	/**
+	 * Constructeur permettant d'initialiser le tag des méthodes
+	 * @param map tag des méthodes
+	 */
 	public MethodVisitor(Map<String, Set<String>> map) {
-		this.map=map;
+		this.methodTag=map;
 	}
 
+	/**
+	 * Retourne la valeur de modifLocal
+	 * @return la valeur de modifLocal
+	 */
 	public boolean isModifLocal() {
 		return modifLocal;
 	}
 
-	public boolean isProblem() {
-		return problem;
+	/**
+	 * Retourne la valeur de notParallelizable
+	 * @return
+	 */
+	public boolean isNotParallelisable() {
+		return notParallelisable;
 	}
 
+	/**
+	 * Retourne la valeur de readOnly
+	 * @return readOnly
+	 */
 	public boolean isReadOnly() {
 		return readOnly;
 	}
 
+
+	/**
+	 * Permet de vérifier si un noeud fait partie du même cycle que l'objet courant
+	 * @param node le noeud à vérifier
+	 * @return si les deux noeuds font partie du même cycle
+	 */
 	private boolean isSameCycle(MethodInvocation node) {
+		//Si listCycle == null la méthode courante n'est pas dans un cycle
 		if (listCycle!=null) {
 			for (MethodDeclaration methodDeclaration : listCycle) {
 				if (methodDeclaration.resolveBinding().getKey().equals(node.resolveMethodBinding().getKey()))return true;
 			}
 		}
-		
 		return false;
 	}
 
+	/**
+	 * Retourne si la méthode est threadSafe ou non
+	 * @return si la méthode est threadSafe
+	 */
 	public boolean isThreadSafe() {
 		return threadSafe;
 	}
@@ -100,12 +153,11 @@ public class MethodVisitor extends ASTVisitor {
 			}
 			String key = node.resolveMethodBinding().getKey();
 			//System.out.println(key);
-			if(map.get("NotParallelizable").contains(key)) {
+			if(methodTag.get("NotParallelizable").contains(key)) {
 				modifLocal = false;
 				readOnly = false;
-				// TODO : threadSafe = false ?
-			} else if(!(map.get("ThreadSafe").contains(key) && map.get("ModifLocal").contains(key) && map.get("ReadOnly").contains(key))) {
-				problem = true;
+			} else if(!(methodTag.get("ThreadSafe").contains(key) && methodTag.get("ModifLocal").contains(key) && methodTag.get("ReadOnly").contains(key))) {
+				notParallelisable = true;
 			}
 		}
 
