@@ -38,12 +38,25 @@ import org.eclipse.jdt.internal.corext.refactoring.structure.CompilationUnitRewr
  */
 @SuppressWarnings("restriction")
 public class TraitementFor extends CompilationUnitRewriteOperation {
+	//Permet de savoir les import ajouté pour un fichier et de ne pas le rajouter s'il y est déjà
 	private static Map<String, List<Name>> importAdded = new HashMap<>();
+	/**
+	 * Permet de vider la liste des imports ajoutés
+	 */
 	static void clear () {
 		importAdded.clear();
 	}
+	/**
+	 * Catégorie des méthodes
+	 */
 	private HashMap<String, Set<String>> methode;
+	/**
+	 * Nom du fichier
+	 */
 	private String name;
+	/**
+	 * Noeud entrain d'être traiter
+	 */
 	private Statement node;
 
 	/**
@@ -79,7 +92,11 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		}
 		return false;
 	}
-	
+	/**
+	 * Permet de vérifier si un import n'a pas déjà été ajouté
+	 * @param name nom de l'import
+	 * @return si l'import est présent
+	 */
 	private boolean containsImport(Name name) {
 		boolean test1 = false;
 		for (Object o : unit.imports()) {
@@ -155,12 +172,11 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		Statement body = ((EnhancedForStatement) node).getBody();
 		SingleVariableDeclaration parameter = ((EnhancedForStatement) node).getParameter();
 		
-		//We call the accept method on the AST, that will visit all the nodes, and use a personalized ASTVisitor to apply our changes
+		//Récupération du type de tableau
 		ITypeBinding t = expression.resolveTypeBinding();
 		
+		//Vérification du type de tableau et création du machin.stream
 		MethodInvocation mapTo = verifParameter2(parameter, t, ast);
-//		verifParameter(parameter, ast);
-		
 		
 		//Verification du type de tableau sur lequel on veut stream
 		MethodInvocation replaceMethod = detectCollectionType(ast, expression, t, rewrite);
@@ -172,7 +188,6 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			lb.parameters().add(ASTNode.copySubtree(ast, parameter));
 			
 			mapTo.arguments().add(lb);
-//			mapTo.setExpression(replaceMethod);
 		}
 		
 		//Creation of : <collection>.stream()
@@ -180,6 +195,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		// Method to copy an ASTNode and use it elsewhere : ASTNode.copySubtree(AST, nodeToCopy))
 		TraitementForBodyVisitor tfb = new TraitementForBodyVisitor(node, ast);
 		body.accept(tfb);
+		
 		
 		TransformationMapVisitor tMap = new TransformationMapVisitor(parameter);
 		if(tfb.getBody()!=null)tfb.getBody().accept(tMap);
@@ -190,8 +206,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		if(tMap.getNbInstruction()==1 && tMap.getMap()!=null && tMap.getTerminale()!=null) {
 			// replace stream by parallelStream because it is a map with sum or addAll
 			MethodInvocation parallel = ast.newMethodInvocation();
-//			if(mapTo!=null)parallel.setExpression(mapTo);
-//			else parallel.setExpression(replaceMethod);
+
 			parallel.setExpression(replaceMethod);
 			parallel.setName(ast.newSimpleName("parallel"));
 			
@@ -228,7 +243,6 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 					importAdded.get(this.name).add(name);
 					ListRewrite lrw = rewrite.getListRewrite(unit, CompilationUnit.IMPORTS_PROPERTY);
 					lrw.insertLast(im, null);
-					
 				}
 				
 				MethodInvocation res = ast.newMethodInvocation();
@@ -260,7 +274,6 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			boolean parallelizable;
 			LambdaExpression forEachCorps = ast.newLambdaExpression();
 			forEachCorps.setParentheses(false);
-			// TODO verifier si body parralelisable
 			if(tfb.getBody()!=null) {
 				BodyParallelizableVisitor bP = new BodyParallelizableVisitor(methode);
 				tfb.getBody().accept(bP);
@@ -268,6 +281,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 				forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody())); //filter qui est appliquer
 			}else {
 				//pas de filter, juste for each
+				//Vérification si le corps est un block, sinon on mets dans un Block
 				if ( !(body instanceof Block) ){
 					Block b = ast.newBlock();
 					b.statements().add(ASTNode.copySubtree(ast, body));
@@ -278,9 +292,6 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 				parallelizable = bP.isParallelizable();
 				forEachCorps.setBody(ASTNode.copySubtree(ast, body));
 			}
-			
-
-
 			
 			if(tfb.getFirst()!=null && tfb.getLast()!=null) {
 				if(parallelizable) {

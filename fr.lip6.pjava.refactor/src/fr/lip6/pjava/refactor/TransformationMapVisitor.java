@@ -19,6 +19,11 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
+/**
+ * 
+ * @author teill
+ *
+ */
 public class TransformationMapVisitor extends ASTVisitor {
 	
 	private AST ast = null;
@@ -105,7 +110,6 @@ public class TransformationMapVisitor extends ASTVisitor {
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean visit(Assignment node) {
-		// TODO verifier qu'il n'y est qu'une seul operation dans le block et seul block
 		nbInstruction++;
 		if(node.getLeftHandSide().getNodeType()==ASTNode.SIMPLE_NAME && !variableLocale.contains(((SimpleName)node.getLeftHandSide()).resolveBinding().getKey())) {
 

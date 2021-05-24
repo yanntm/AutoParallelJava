@@ -29,7 +29,8 @@ import org.eclipse.jdt.core.dom.TryStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 /**
- * Class use to check the enhancedFor if this is possible to transform them
+ * Class use to check the enhancedFor if this is possible 
+ * to transform them to stream
  * @author Teillet & Capitanio
  *
  */

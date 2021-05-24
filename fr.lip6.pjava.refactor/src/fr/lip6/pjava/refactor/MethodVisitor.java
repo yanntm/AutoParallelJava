@@ -21,6 +21,12 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SynchronizedStatement;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
+/**
+ * Classe implémentant l'interface visiteur et visitant des Method déclarations
+ * pour pouvoir classer les méthodes en catégorie
+ * @author Teillet & Capitanio
+ *
+ */
 public class MethodVisitor extends ASTVisitor {
 	private List<MethodDeclaration> listCycle;
 	private Set<String> localVariable = new HashSet<String>();
