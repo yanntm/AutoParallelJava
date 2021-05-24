@@ -43,7 +43,7 @@ import generation.graphe.methode.invocation.structure.AdjacencyList;
 public class For2Lambda extends AbstractMultiFix implements ICleanUp {	 
 	private CleanUpOptions fOptions;
 	private RefactoringStatus fStatus;
-	private HashMap<String, Set<String>> map;
+	private HashMap<String, Set<String>> methodTag;
 
 
 
@@ -90,7 +90,7 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 				List<MethodVisitor> visitors = new ArrayList<MethodVisitor>();
 				List<Boolean> resVisitors = new ArrayList<Boolean>();
 				for (MethodDeclaration meth : list) {
-					MethodVisitor visit = new MethodVisitor(map);
+					MethodVisitor visit = new MethodVisitor(methodTag);
 					meth.accept(visit);
 					visitors.add(visit);
 					resVisitors.add(isParallelizable(meth, visit));
@@ -102,7 +102,7 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 				if(cycleParallelizable) {
 					int i=0;
 					for (MethodVisitor visitor : visitors) {
-						methodDistribution(map, list.get(i), visitor);
+						methodDistribution(methodTag, list.get(i), visitor);
 					}
 				}
 			}
@@ -111,9 +111,9 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 				IMethodBinding bind = graph.getNodes().get(i);
 				MethodDeclaration dec =  graph.getNodes().get(bind);
 				if(!inCycle(dec,cycleMeth)) {
-					MethodVisitor visit = new MethodVisitor(map);
+					MethodVisitor visit = new MethodVisitor(methodTag);
 					dec.accept(visit);
-					methodDistribution(map, dec, visit);
+					methodDistribution(methodTag, dec, visit);
 				}
 			}
 		}
@@ -139,7 +139,7 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 					if (visitorPreCond.isUpgradable() )
 					{
 						//Ne pas ajouter d'élément qui ne fait rien
-						rewriteOperations.add(new TraitementFor(cu, node, map));
+						rewriteOperations.add(new TraitementFor(cu, node, methodTag));
 					}
 				}
 				return false;
@@ -201,14 +201,23 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 		return false;
 	}
 
+	/**
+	 * Initialise la map d'attribution des categories de methode
+	 */
 	private void initialiseMap() {
-		map = new HashMap<>();
-		map.put("ReadOnly", new HashSet<>());
-		map.put("ThreadSafe", new HashSet<>());
-		map.put("ModifLocal", new HashSet<>());
-		map.put("NotParallelizable", new HashSet<>());
+		methodTag = new HashMap<>();
+		methodTag.put("ReadOnly", new HashSet<>());
+		methodTag.put("ThreadSafe", new HashSet<>());
+		methodTag.put("ModifLocal", new HashSet<>());
+		methodTag.put("NotParallelizable", new HashSet<>());
 	}
 
+	/**
+	 * Test si une methode est parallelisable
+	 * @param node methode tester
+	 * @param visitor visitor de methode
+	 * @return True si parallelisable
+	 */
 	private boolean isParallelizable(MethodDeclaration node,MethodVisitor visitor) {
 		if (visitor.isReadOnly()) {
 			return true;
@@ -223,21 +232,27 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 		}
 	}
 
-	private void methodDistribution(Map<String, Set<String>> map, MethodDeclaration node,
+	/**
+	 * Place une methode selon sa categorie dans map
+	 * @param methodTag categories des methodes
+	 * @param node methode place dans map
+	 * @param visitor vistor associer aux methodes
+	 */
+	private void methodDistribution(Map<String, Set<String>> methodTag, MethodDeclaration node,
 			MethodVisitor visitor) {
 		if (visitor.isReadOnly()) {
-			map.get("ReadOnly").add(node.resolveBinding().getKey());
+			methodTag.get("ReadOnly").add(node.resolveBinding().getKey());
 		}
 		else if (Modifier.isSynchronized(node.resolveBinding().getModifiers())) {
-			map.get("ThreadSafe").add(node.resolveBinding().getKey());
+			methodTag.get("ThreadSafe").add(node.resolveBinding().getKey());
 		}
 		else if (visitor.isThreadSafe()) {
-			map.get("ThreadSafe").add(node.resolveBinding().getKey());
+			methodTag.get("ThreadSafe").add(node.resolveBinding().getKey());
 		}
 		else if ( visitor.isModifLocal()) {
-			map.get("ModifLocal").add(node.resolveBinding().getKey());
+			methodTag.get("ModifLocal").add(node.resolveBinding().getKey());
 		} else {
-			map.get("NotParallelizable").add(node.resolveBinding().getKey());
+			methodTag.get("NotParallelizable").add(node.resolveBinding().getKey());
 		}
 	}
 
