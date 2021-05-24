@@ -14,7 +14,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
  * @author Teillet & Capitanio
  *
  */
-public class TraitementForBody extends ASTVisitor {
+public class TraitementForBodyVisitor extends ASTVisitor {
 	/**
 	 * The AST in which the transformation is done
 	 */
@@ -42,7 +42,7 @@ public class TraitementForBody extends ASTVisitor {
 	 * @param parent the parent who call the operation
 	 * @param ast the in which we do the operation
 	 */
-	public TraitementForBody(ASTNode parent, AST ast) {
+	public TraitementForBodyVisitor(ASTNode parent, AST ast) {
 		this.parent = parent;
 		this.ast = ast;
 	}

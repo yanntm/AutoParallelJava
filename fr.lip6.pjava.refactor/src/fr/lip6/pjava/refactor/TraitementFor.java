@@ -178,10 +178,10 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		//Creation of : <collection>.stream()
 		
 		// Method to copy an ASTNode and use it elsewhere : ASTNode.copySubtree(AST, nodeToCopy))
-		TraitementForBody tfb = new TraitementForBody(node, ast);
+		TraitementForBodyVisitor tfb = new TraitementForBodyVisitor(node, ast);
 		body.accept(tfb);
 		
-		TransformationMap tMap = new TransformationMap(parameter);
+		TransformationMapVisitor tMap = new TransformationMapVisitor(parameter);
 		if(tfb.getBody()!=null)tfb.getBody().accept(tMap);
 		else body.accept(tMap);
 		//tMap.end();
@@ -262,7 +262,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 			forEachCorps.setParentheses(false);
 			// TODO verifier si body parralelisable
 			if(tfb.getBody()!=null) {
-				BodyParallelizable bP = new BodyParallelizable(methode);
+				BodyParallelizableVisitor bP = new BodyParallelizableVisitor(methode);
 				tfb.getBody().accept(bP);
 				parallelizable = bP.isParallelizable(); 
 				forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody())); //filter qui est appliquer
@@ -273,7 +273,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 					b.statements().add(ASTNode.copySubtree(ast, body));
 					body = b;
 				}
-				BodyParallelizable bP = new BodyParallelizable(methode);
+				BodyParallelizableVisitor bP = new BodyParallelizableVisitor(methode);
 				body.accept(bP);
 				parallelizable = bP.isParallelizable();
 				forEachCorps.setBody(ASTNode.copySubtree(ast, body));

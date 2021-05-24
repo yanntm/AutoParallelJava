@@ -7,12 +7,12 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 
-public class BodyParallelizable extends ASTVisitor {
+public class BodyParallelizableVisitor extends ASTVisitor {
 	private HashMap<String, Set<String>> methode;
 	private boolean parallelizable=true;
 	private int problem = 0;
 
-	public BodyParallelizable(HashMap<String, Set<String>> methode) {
+	public BodyParallelizableVisitor(HashMap<String, Set<String>> methode) {
 		this.methode=methode;
 	}
 

@@ -19,7 +19,7 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-public class TransformationMap extends ASTVisitor {
+public class TransformationMapVisitor extends ASTVisitor {
 	
 	private AST ast = null;
 	
@@ -38,7 +38,7 @@ public class TransformationMap extends ASTVisitor {
 	private List<String> variableLocale = new ArrayList<>();
 	
 	
-	public TransformationMap(SingleVariableDeclaration parameter) {
+	public TransformationMapVisitor(SingleVariableDeclaration parameter) {
 		this.parameter = parameter;
 		ast = parameter.getAST();
 	}
@@ -215,14 +215,4 @@ public class TransformationMap extends ASTVisitor {
 		return true;
 	}
 	
-//	public void end() {
-//		if(map!=null && map.arguments().size()==1) {
-//			LambdaExpression le = (LambdaExpression) map.arguments().get(0);
-//			SingleVariableDeclaration svd = (SingleVariableDeclaration)(le.parameters().get(0));
-//		
-//			if (le.getBody().getNodeType()==ASTNode.SIMPLE_NAME && ((SimpleName)le.getBody()).getFullyQualifiedName().equals(svd.getName().getFullyQualifiedName()) ) {
-//				map = terminale;
-//			}
-//		}
-//	}
 }

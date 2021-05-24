@@ -1,6 +1,5 @@
 package fr.lip6.pjava.refactor;
 
-import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -78,7 +77,7 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 
 			PuckGraph graph = GraphBuilder.collectGraph(parsedCu);
 
-//			exportGraph(graph);
+			//exportGraph(graph);
 			
 			initialiseMap();
 
@@ -133,7 +132,7 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 			@Override
 			public boolean visit(EnhancedForStatement node) {
 
-				ASTVisitorPreCond visitorPreCond = new  ASTVisitorPreCond(node);
+				ASTPreCondVisitor visitorPreCond = new  ASTPreCondVisitor(node);
 				if (visitorPreCond.isUpgradable()) {
 					node.getBody().accept(visitorPreCond);
 
@@ -170,15 +169,15 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 		return res;
 	}
 
-	private void exportGraph(PuckGraph graph) {
-		try {
-			graph.exportDot("D:\\Users\\teill\\Documents\\test.dot");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
+//	private void exportGraph(PuckGraph graph) {
+//		try {
+//			graph.exportDot("C:\\Users\\teill\\Documents\\test.dot");
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//		
+//	}
 
 	@Override
 	public CleanUpRequirements getRequirements() {

@@ -18,7 +18,6 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
 import org.eclipse.jdt.core.dom.QualifiedName;
@@ -34,7 +33,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
  * @author Teillet & Capitanio
  *
  */
-public class ASTVisitorPreCond extends ASTVisitor {
+public class ASTPreCondVisitor extends ASTVisitor {
 	/**
 	 * We keep the caller to be sure to not verify things outside of the EnhancedFor
 	 */
@@ -57,7 +56,7 @@ public class ASTVisitorPreCond extends ASTVisitor {
 	 * The constructor use to initiate the attributes
 	 * @param caller this the node calling this object
 	 */
-	public ASTVisitorPreCond(EnhancedForStatement caller) {
+	public ASTPreCondVisitor(EnhancedForStatement caller) {
 		this.caller = caller;
 		isUpgradable = isCollection(caller.getExpression());
 	}
