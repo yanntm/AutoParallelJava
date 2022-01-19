@@ -6,19 +6,13 @@ import java.util.Stack;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Name;
-import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import generation.graphe.methode.invocation.fr.lip6.puck.graph.DependencyNodes;
-import generation.graphe.methode.invocation.fr.lip6.puck.graph.PuckGraph;
+import generation.graphe.methode.invocation.fr.lip6.puck.graph.MethodGraph;
 
 
 /**
@@ -29,16 +23,17 @@ import generation.graphe.methode.invocation.fr.lip6.puck.graph.PuckGraph;
 public final class GraphBuilder  {
 
 	/**
-	 * A visitor for AST that collects edges for any usage or containment 
+	 * A visitor for AST that collects edges for any usage or containment
 	 * where both nodes belong to the graph.
 	 *
 	 */
 	private static class EdgeCollector extends ASTVisitor {
+		// method declaration that owns current statement
 		private Stack<Integer> currentOwner = new Stack<>();
 
-		private PuckGraph graph;
+		private MethodGraph graph;
 
-		public EdgeCollector(PuckGraph graph) {
+		public EdgeCollector(MethodGraph graph) {
 			this.graph = graph;
 		}
 
@@ -46,7 +41,7 @@ public final class GraphBuilder  {
 		/**
 		 * Add a dependency from top of curentOwner stack (if any) to the node referred to in the binding (if any).
 		 * @param tb A @see {@link IBinding} resolved name that might point to a node of the graph.
-		 * @param node 
+		 * @param node
 		 */
 		private void addDependency(IBinding tb, ASTNode node) {
 			if (!currentOwner.isEmpty()) {
@@ -56,24 +51,13 @@ public final class GraphBuilder  {
 					graph.getUseGraph().addEdge(indexDst, indexSrc, node);
 				}
 			}
-		}	
+		}
 
 		@Override
 		public void endVisit(MethodDeclaration node) {
-			currentOwner.pop(); 
-		}	
-
-		@Override
-		public void endVisit(TypeDeclaration node) {
-			currentOwner.pop();		
+			currentOwner.pop();
 		}
 
-		@Override
-		public void endVisit(VariableDeclarationFragment node) {
-			if (node.getParent() instanceof FieldDeclaration) {
-				currentOwner.pop();
-			} 
-		}
 
 		/**
 		 * The actual visit a "Name" case, resolve the node it points to, and add a dependency to it.
@@ -95,45 +79,12 @@ public final class GraphBuilder  {
 		@Override
 		public boolean visit(MethodDeclaration node) {
 			int cur = graph.getNodes().findIndex(node.resolveBinding());
-			if (!currentOwner.isEmpty() && cur != -1) {
-				graph.getComposeGraph().addEdge(cur, currentOwner.peek(), node);
-			}
+
+			// nested method declarations ??
+//			if (!currentOwner.isEmpty() && cur != -1) {
+//				graph.getComposeGraph().addEdge(cur, currentOwner.peek(), node);
+//			}
 			currentOwner.push(cur);
-			return true;
-		}
-
-		/**
-		 * Owner becomes the current type declaration.
-		 */
-		@Override
-		public boolean visit(TypeDeclaration node) {
-			ITypeBinding type = node.resolveBinding();
-			// is there a containment edge ?
-			int cur = graph.getNodes().findIndex(type);
-			if (!currentOwner.isEmpty() && cur != -1) {
-				graph.getComposeGraph().addEdge(cur, currentOwner.peek(), node);
-			}
-			// also add that this is contained in its package
-			// so a direct containment link from package to any type definition.
-			int parent = graph.findIndex(type.getPackage());
-			graph.getComposeGraph().addEdge(cur, parent, node);		
-			// we are new owner
-			currentOwner.push(cur);		
-			return true;
-		}
-
-		/**
-		 * Current owner becomes the field declaration.
-		 */
-		@Override
-		public boolean visit(VariableDeclarationFragment node) {
-			if (node.getParent() instanceof FieldDeclaration) {
-				int cur = graph.getNodes().findIndex(node.resolveBinding());
-				if (!currentOwner.isEmpty() && cur != -1) {
-					graph.getComposeGraph().addEdge(cur, currentOwner.peek(), node);
-				}
-				currentOwner.push(cur);
-			}
 			return true;
 		}
 
@@ -145,46 +96,22 @@ public final class GraphBuilder  {
 	 * @param parsedCu A list of parsed Java DOM representations of sources.
 	 * @return a graph containing the analysis results.
 	 */
-	public static PuckGraph collectGraph(List<CompilationUnit> parsedCu) {
+	public static MethodGraph collectGraph(List<CompilationUnit> parsedCu) {
 		// The nodes we will collect in a first pass.
-		DependencyNodes nodes = new DependencyNodes();		
+		DependencyNodes nodes = new DependencyNodes();
 
-		// First pass with a visitor.
-		// This visitor is not stateful so we used an anonymous class.
-		// actual traversal to find all relevant nodes we will consider within the scope of our graph. 
-		for (CompilationUnit unit : parsedCu) {
-
+		parsedCu.stream().parallel().forEach((unit) -> {
 			unit.accept(new ASTVisitor() {
-				@Override
-				public void endVisit(PackageDeclaration node) {
-//					nodes.addPackage(node.resolveBinding());
-					super.endVisit(node);
-				}
-
 				/**
-				 * Deal with TypeDeclaration : classes + interfaces : add nodes for them, their methods, their attributes.
-				 *  
-				 */
+				* Deal with TypeDeclaration : classes + interfaces : add nodes for them, their methods, their attributes.
+				*/
 				@Override
-				public void endVisit(TypeDeclaration node) {
-					ITypeBinding itb = node.resolveBinding();
-//					nodes.addType(itb);
-					for (MethodDeclaration meth : node.getMethods()) {
-						IMethodBinding mtb = meth.resolveBinding();
-						nodes.addMethod(mtb, meth);
-					}
-
-					for (FieldDeclaration att : node.getFields()) {
-						for (Object toc : att.fragments()) {
-							VariableDeclarationFragment vdf = (VariableDeclarationFragment) toc;
-							IVariableBinding ivb = vdf.resolveBinding();
-//							nodes.addAttribute(ivb);
-						}
-					}
-					super.endVisit(node);
-				}				
+				public void endVisit(MethodDeclaration meth) {
+					IMethodBinding mtb = meth.resolveBinding();
+					nodes.addMethod(mtb, meth);
+				}
 			});
-		}
+		});
 
 		System.out.println("Found " + nodes.size() + " nodes : " + nodes);
 
@@ -193,15 +120,14 @@ public final class GraphBuilder  {
 		// that we have collected above, the edge is discarded.
 
 		// Let's initialize the graph with the context nodes we have collected.
-		PuckGraph graph = new PuckGraph(nodes);
+		MethodGraph graph = new MethodGraph(nodes);
 
 		// Now the graph builder; because it is stateful (it keeps track of which node is current owner) it is implemented as a separate Visitor class.
 		EdgeCollector edgeCollector = new EdgeCollector(graph);
 
-		// now build the graph dependency links using our visitor.
-		for (CompilationUnit unit : parsedCu) {
+		parsedCu.stream().parallel().forEach((unit) -> {
 			unit.accept(edgeCollector);
-		}
+		});
 
 		return graph;
 	}

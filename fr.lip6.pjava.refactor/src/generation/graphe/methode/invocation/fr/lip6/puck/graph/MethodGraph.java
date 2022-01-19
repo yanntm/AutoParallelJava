@@ -25,32 +25,16 @@ import org.eclipse.jdt.core.dom.IBinding;
  * @author Yann
  *
  */
-public class PuckGraph {
-	public static class Rule {
-		public final Set<Integer> from;
-		public final Set<Integer> hide;
-		public String text;
-		public Rule(Set<Integer> hide, Set<Integer> from, String text) {
-			this.hide = hide;
-			this.from = from;
-			this.text = text;
-		}
-	}
-	private DependencyGraph composeGraph;
+public class MethodGraph {
+	
 	private DependencyNodes nodes;
-	private List<Rule> rules = new ArrayList<>();
 	private Map<String,Set<Integer>> setDeclarations = new HashMap<>();
 
 	private DependencyGraph useGraph;
 
-	public PuckGraph(DependencyNodes nodes) {
+	public MethodGraph(DependencyNodes nodes) {
 		this.nodes = nodes;
 		this.useGraph = new DependencyGraph(nodes.size());
-		this.composeGraph = new DependencyGraph(nodes.size());
-	}
-
-	public void addRule (Set<Integer> hide, Set<Integer> from, String text) {
-		this.rules.add (new Rule(hide,from, text));
 	}
 
 	public void addSetDeclaration(String name, Set<Integer> nodes) {
@@ -63,7 +47,6 @@ public class PuckGraph {
 	 * @throws IOException if we couldn't write to that place.
 	 */
 	public void exportDot (String path) throws IOException {
-		getComposeGraph();
 		PrintWriter out = new PrintWriter(new File(path));
 		out.println("digraph  G {");
 		nodes.dotExport(out);
@@ -72,10 +55,8 @@ public class PuckGraph {
 		useGraph.dotExport(out, "");
 
 		// containment edges 
-		composeGraph.dotExport(out, "[style=dotted]");
 
 		boolean doRedArcs=true;
-		if (! doRedArcs) {
 			// named sets
 			for (Entry<String, Set<Integer>> ent : setDeclarations.entrySet()) {
 				out.println("  "+ent.getKey()+ " [color=blue] ;");
@@ -83,25 +64,6 @@ public class PuckGraph {
 					out.println("  "+ent.getKey()+ " -> n" + i + " [color=blue] ;");				
 				}
 			}
-
-			// broken right now
-			//			for (Rule rule : rules) {
-			//				out.println("  "+rule.hide+ " -> " + rule.from + " [color=red] ;");							
-			//			}
-		} else {
-			for (Rule rule : rules) {
-				Set<Integer> from = new HashSet<>(rule.from);
-				Set<Integer> hide = new HashSet<>(rule.hide);
-
-				for (Integer interloper : from) {
-					for (Integer secret : hide) {
-						if (useGraph.hasEdge(secret, interloper) || composeGraph.hasEdge(secret, interloper)) {
-							out.println("  n"+interloper+ " -> n" + secret + " [color=red] ;");														
-						}
-					}
-				}
-			}
-		}
 
 		out.println("}");
 		out.close();
@@ -115,17 +77,11 @@ public class PuckGraph {
 		return nodes.findIndex(key);
 	}
 	
-	public DependencyGraph getComposeGraph() {
-		return composeGraph;
-	}
 
 	public DependencyNodes getNodes() {
 		return nodes;
 	}
 
-	public List<Rule> getRules() {
-		return rules;
-	}
 
 	public Set<Integer> getSetDeclaration (String name) {
 		return setDeclarations.getOrDefault(name, Collections.emptySet());

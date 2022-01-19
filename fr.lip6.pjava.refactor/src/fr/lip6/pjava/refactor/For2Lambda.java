@@ -1,5 +1,6 @@
 package fr.lip6.pjava.refactor;
 
+import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +30,7 @@ import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 
 import generation.graphe.methode.invocation.fr.lip6.puck.graph.DependencyNodes;
-import generation.graphe.methode.invocation.fr.lip6.puck.graph.PuckGraph;
+import generation.graphe.methode.invocation.fr.lip6.puck.graph.MethodGraph;
 import generation.graphe.methode.invocation.fr.lip6.puck.parse.GraphBuilder;
 import generation.graphe.methode.invocation.fr.lip6.puck.parse.JavaParserHelper;
 import generation.graphe.methode.invocation.structure.AdjacencyList;
@@ -75,9 +76,19 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 			
 			List<CompilationUnit> parsedCu = JavaParserHelper.parseSources(project, compilationUnits,monitor);
 
-			PuckGraph graph = GraphBuilder.collectGraph(parsedCu);
+			MethodGraph graph = GraphBuilder.collectGraph(parsedCu);
 
 			//exportGraph(graph);
+			try {
+				graph.exportDot(project.getProject().getLocation().toFile().getCanonicalPath() + "/graph.dot");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+//			if (true) {
+//				return new RefactoringStatus();
+//			}
 			
 			initialiseMap();
 

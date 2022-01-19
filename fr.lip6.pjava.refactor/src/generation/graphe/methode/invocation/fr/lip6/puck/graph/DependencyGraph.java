@@ -24,8 +24,18 @@ import generation.graphe.methode.invocation.fr.lip6.move.gal.util.MatrixCol;
  */
 public class DependencyGraph {
 	private MatrixCol graph;
-	//private AdjacencyList graph
+	// source -> ((dest1, {r1,r2}),(dest2,{r3}))
+	//
+	// public void meth() { a.m1(); b.m1(); c.m2() ; for ()(...) }
+	// 0 => meth
+	// 1 => m1
+	// 2 => m2
+	// 0 => (1, {"a.m1()","b.m1()"}),(2,{"c.m2()"}))
+	
+	
+	
 	private Map<Integer,Map<Integer,List<ASTNode>>> reasons = new HashMap<>();
+	
 	
 	public DependencyGraph(int nbnodes) {
 		graph = new MatrixCol(nbnodes,nbnodes);

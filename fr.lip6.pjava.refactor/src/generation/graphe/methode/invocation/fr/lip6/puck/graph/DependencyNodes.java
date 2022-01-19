@@ -62,7 +62,6 @@ public class DependencyNodes {
 	public void addMethod(IMethodBinding mtb, MethodDeclaration mtd) {
 		nodes.add(mtb);
 		mtb2mtd.put(mtb, mtd);
-//		methods.add(mtb);
 	}
 	
 	/**
@@ -72,18 +71,9 @@ public class DependencyNodes {
 	public void dotExport(PrintWriter out) {
 		int index = 0;
 		for (IBinding elt : nodes) {
-			if (elt instanceof ITypeBinding) {
-				ITypeBinding tb = (ITypeBinding) elt;
-				out.println("  n"+index+ " [shape=box,label=\""+tb.getQualifiedName()+"\"]");
-			} else if (elt instanceof IVariableBinding) {
-				IVariableBinding vb = (IVariableBinding) elt;
-				out.println("  n"+index+ " [shape=doubleellipse,label=\"" + vb.getDeclaringClass().getQualifiedName()+"."+vb.getName()+"\"];");
-			} else if (elt instanceof IMethodBinding) {
+			if (elt instanceof IMethodBinding) {
 				IMethodBinding mb = (IMethodBinding) elt;
 				out.println("  n"+index+ " [shape=octagon,label=\"" + mb.getDeclaringClass().getQualifiedName()+"."+mb.getName()+"\"];");
-			} else if (elt instanceof IPackageBinding) {
-				IPackageBinding pkg = (IPackageBinding) elt;
-				out.println("  n"+index+ " [shape=folder,label=\"" + pkg.getName() +"\"];");				
 			}
 			index++;
 		}		
