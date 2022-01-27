@@ -38,16 +38,16 @@ import org.eclipse.jdt.internal.corext.refactoring.structure.CompilationUnitRewr
  */
 @SuppressWarnings("restriction")
 public class TraitementFor extends CompilationUnitRewriteOperation {
-	//Permet de savoir les import ajouté pour un fichier et de ne pas le rajouter s'il y est déjà
+	//Permet de savoir les import ajoutÃ© pour un fichier et de ne pas le rajouter s'il y est dÃ©jÃ 
 	private static Map<String, List<Name>> importAdded = new HashMap<>();
 	/**
-	 * Permet de vider la liste des imports ajoutés
+	 * Permet de vider la liste des imports ajoutï¿½s
 	 */
 	static void clear () {
 		importAdded.clear();
 	}
 	/**
-	 * Catégorie des méthodes
+	 * CatÃ©gorie des mÃ©thodes
 	 */
 	private HashMap<String, Set<String>> methode;
 	/**
@@ -55,7 +55,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 	 */
 	private String name;
 	/**
-	 * Noeud entrain d'être traiter
+	 * Noeud entrain d'Ãªtre traiter
 	 */
 	private Statement node;
 
@@ -93,9 +93,9 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		return false;
 	}
 	/**
-	 * Permet de vérifier si un import n'a pas déjà été ajouté
+	 * Permet de vï¿½rifier si un import n'a pas dï¿½jï¿½ ï¿½tï¿½ ajoutï¿½
 	 * @param name nom de l'import
-	 * @return si l'import est présent
+	 * @return si l'import est prï¿½sent
 	 */
 	private boolean containsImport(Name name) {
 		boolean test1 = false;
@@ -172,10 +172,10 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 		Statement body = ((EnhancedForStatement) node).getBody();
 		SingleVariableDeclaration parameter = ((EnhancedForStatement) node).getParameter();
 		
-		//Récupération du type de tableau
+		//Rï¿½cupï¿½ration du type de tableau
 		ITypeBinding t = expression.resolveTypeBinding();
 		
-		//Vérification du type de tableau et création du machin.stream
+		//Vï¿½rification du type de tableau et crï¿½ation du machin.stream
 		MethodInvocation mapTo = verifParameter(parameter, t, ast);
 		
 		//Verification du type de tableau sur lequel on veut stream
@@ -281,7 +281,7 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 				forEachCorps.setBody(ASTNode.copySubtree(ast, tfb.getBody())); //filter qui est appliquer
 			}else {
 				//pas de filter, juste for each
-				//Vérification si le corps est un block, sinon on mets dans un Block
+				//Vï¿½rification si le corps est un block, sinon on mets dans un Block
 				if ( !(body instanceof Block) ){
 					Block b = ast.newBlock();
 					b.statements().add(ASTNode.copySubtree(ast, body));
@@ -346,12 +346,12 @@ public class TraitementFor extends CompilationUnitRewriteOperation {
 	}
 	
 	/**
-	 * Permet de vérifier le type de paramétre et si 
-	 * l'appel à un mapTo est nécessaire ou non
-	 * @param parameter declaration du paramètre
+	 * Permet de vï¿½rifier le type de paramï¿½tre et si 
+	 * l'appel ï¿½ un mapTo est nï¿½cessaire ou non
+	 * @param parameter declaration du paramï¿½tre
 	 * @param typeFor type de la collection
 	 * @param ast ast appartennat au COmpilationUnit
-	 * @return l'appel à un mapTo s'il y a besoin
+	 * @return l'appel ï¿½ un mapTo s'il y a besoin
 	 */
 	private MethodInvocation verifParameter(SingleVariableDeclaration parameter, ITypeBinding typeFor, AST ast) {
 		Type t = parameter.getType();
