@@ -153,7 +153,10 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 				if (isStreamType(resType)) {
 					if (! isStreamType(node.getExpression().resolveTypeBinding())) {
 						// node = coll.stream(), expr = coll
-						rewriteOperations.add(new StreamToParallel(node));
+						
+						// TODO : determine if it is safe to do !
+						if (false)
+							rewriteOperations.add(new StreamToParallel(node));
 					}
 				}
 	
