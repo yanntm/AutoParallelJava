@@ -14,11 +14,15 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix;
 import org.eclipse.jdt.internal.corext.fix.CompilationUnitRewriteOperationsFix.CompilationUnitRewriteOperation;
 import org.eclipse.jdt.internal.ui.fix.AbstractMultiFix;
@@ -138,6 +142,28 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 		if(cu == null || !fOptions.isEnabled("cleanup.transform_enhanced_for")) {return null;}
 		List<CompilationUnitRewriteOperation> rewriteOperations = new ArrayList<>();
 		TraitementFor.clear();
+		
+		cu.accept(new ASTVisitor() {
+			
+			public boolean visit(MethodInvocation node) {
+				// x = coll.stream().filter().collect()
+
+				// look for method invocation with type Stream such that : type of expression is not Stream
+				ITypeBinding resType = node.resolveTypeBinding();
+				if (isStreamType(resType)) {
+					if (! isStreamType(node.getExpression().resolveTypeBinding())) {
+						// node = coll.stream(), expr = coll
+						rewriteOperations.add(new StreamToParallel(node));
+					}
+				}
+	
+				return true;
+			}
+
+			
+		});
+		
+		
 		cu.accept(new ASTVisitor() {
 
 			@Override
@@ -149,7 +175,7 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 
 					if (visitorPreCond.isUpgradable() )
 					{
-						//Ne pas ajouter d'élément qui ne fait rien
+						//Ne pas ajouter d'ï¿½lï¿½ment qui ne fait rien
 						rewriteOperations.add(new TraitementFor(cu, node, methodTag));
 					}
 				}
@@ -167,6 +193,20 @@ public class For2Lambda extends AbstractMultiFix implements ICleanUp {
 	protected ICleanUpFix createFix(CompilationUnit unit, IProblemLocation[] problems) throws CoreException {
 		return null;
 	}
+	
+	
+	private boolean isStreamType(ITypeBinding resType) {
+		// TODO : test subtype somehow ?
+		//					type.isSubTypeCompatible(streamType.);
+		try {
+			String qname = resType.getName().replaceAll("<.*", "");
+			String qpkg = resType.getPackage().getName();
+			return qname.equals("Stream") && qpkg.equals("java.util.stream");
+		} catch (NullPointerException e) {
+			return false;
+		}
+	};
+
 
 	private List<List<MethodDeclaration>> cycleMethodDeclaration(List<List<Integer>> cycle, DependencyNodes nodes){
 		List<List<MethodDeclaration>> res = new ArrayList<List<MethodDeclaration>>();
