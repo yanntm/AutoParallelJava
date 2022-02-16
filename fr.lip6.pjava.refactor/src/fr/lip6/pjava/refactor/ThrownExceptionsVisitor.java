@@ -104,9 +104,10 @@ public class ThrownExceptionsVisitor extends ASTVisitor {
 				res.accept(this);
 			}
 			trys.getFinally().accept(this);
+			// we have visited manually
+			return false;
 		}
-		// we have visited manually
-		return false;
+		return true;
 	}
 	
 	@Override
